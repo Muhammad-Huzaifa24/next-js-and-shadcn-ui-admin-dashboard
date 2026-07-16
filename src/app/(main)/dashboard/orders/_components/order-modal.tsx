@@ -79,7 +79,8 @@ export function OrderModal({ order, onClose }: OrderModalProps) {
   if (!order) return null;
 
   function copyId() {
-    void navigator.clipboard.writeText(order?.id);
+    if (!order) return;
+    void navigator.clipboard.writeText(order.id);
   }
 
   return (

@@ -196,7 +196,6 @@ export function CustomersTable() {
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    columnVisibility: { segment: false },
   });
 
   function handleSegment(seg: string) {

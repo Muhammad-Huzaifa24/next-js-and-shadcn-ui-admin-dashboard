@@ -2,10 +2,10 @@
 
 import { Star } from "lucide-react";
 
-import type { ProductRow } from "@/app/(main)/dashboard/products/_data/products-data";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import type { ProductRow } from "@/store/products-context";
 
 interface ProductModalProps {
   product: ProductRow | null;
