@@ -109,6 +109,9 @@ const updated = fileContent.replace(
 
 function main() {
   const biomeBin = require.resolve("@biomejs/biome/bin/biome");
+  console.log("Biome:", biomeBin);
+  console.log("Output path:", outputPath);
+  console.log("Updated length:", updated.length);
   const formatted = execFileSync(process.execPath, [biomeBin, "format", "--stdin-file-path", outputPath], {
     input: updated,
     encoding: "utf8",
