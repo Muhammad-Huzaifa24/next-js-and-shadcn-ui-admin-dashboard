@@ -140,7 +140,7 @@ export function DataTable<TData>({
               <Input
                 className="w-56 pl-8"
                 placeholder={searchPlaceholder}
-                value={(table.getColumn(searchColumn)?.getFilterValue() as string | undefined) ?? ""}
+                value={String(table.getColumn(searchColumn)?.getFilterValue() ?? "")}
                 onChange={(e) => {
                   table.getColumn(searchColumn)?.setFilterValue(e.target.value);
                   table.setPageIndex(0);

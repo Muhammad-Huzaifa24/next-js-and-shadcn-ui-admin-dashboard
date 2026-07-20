@@ -242,7 +242,7 @@ export function CustomersTable() {
             <Input
               className="w-56 pl-8"
               placeholder="Search customers..."
-              value={(table.getColumn("name")?.getFilterValue() as string | undefined) ?? ""}
+              value={String(table.getColumn("name")?.getFilterValue() ?? "")}
               onChange={(e) => {
                 table.getColumn("name")?.setFilterValue(e.target.value);
                 table.setPageIndex(0);
