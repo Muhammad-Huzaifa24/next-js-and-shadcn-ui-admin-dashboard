@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, use, useEffect, useState } from "react";
+import * as React from "react";
 
-import { type StoreApi, useStore } from "zustand";
+import { create, useStore } from "zustand";
 
 import {
   PREFERENCE_DEFAULTS,
@@ -10,82 +10,87 @@ import {
   PREFERENCE_REGISTRY,
   type PreferenceKey,
   type PreferenceValueMap,
-  parsePreference,
 } from "@/lib/preferences/preferences-config";
-import { applyThemeMode, subscribeToSystemTheme } from "@/lib/preferences/theme-utils";
+import type { ResolvedThemeMode } from "@/lib/preferences/theme";
 
-import { createPreferencesStore, type PreferencesState } from "./preferences-store";
+// ─── Store shape ─────────────────────────────────────────────────────────────
 
-const PreferencesStoreContext = createContext<StoreApi<PreferencesState> | null>(null);
-
-function readDomPreference<K extends PreferenceKey>(key: K): PreferenceValueMap[K] {
-  const definition = PREFERENCE_REGISTRY[key];
-  const rawValue = document.documentElement.getAttribute(definition.attribute);
-
-  return parsePreference(key, rawValue);
+interface PreferencesState {
+  values: PreferenceValueMap;
+  resolvedThemeMode: ResolvedThemeMode;
+  setPreference: <K extends PreferenceKey>(key: K, value: PreferenceValueMap[K]) => void;
+  resetPreferences: () => void;
 }
 
-function readDomPreferences(): PreferenceValueMap {
-  const values = { ...PREFERENCE_DEFAULTS };
+function createPreferencesStore(initialValues: PreferenceValueMap) {
+  return create<PreferencesState>((set, get) => ({
+    values: initialValues,
+    resolvedThemeMode: resolveThemeMode(initialValues.theme_mode),
 
-  function assignPreference<K extends PreferenceKey>(key: K) {
-    values[key] = readDomPreference(key);
+    setPreference: (key, value) => {
+      const def = PREFERENCE_REGISTRY[key];
+
+      // Apply to <html>
+      document.documentElement.setAttribute(def.attribute, value);
+
+      // Persist as cookie
+      document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+
+      const nextValues = { ...get().values, [key]: value };
+      set({
+        values: nextValues,
+        resolvedThemeMode: resolveThemeMode(nextValues.theme_mode),
+      });
+    },
+
+    resetPreferences: () => {
+      for (const key of PREFERENCE_KEYS) {
+        const def = PREFERENCE_REGISTRY[key];
+        const defaultVal = def.defaultValue;
+        document.documentElement.setAttribute(def.attribute, defaultVal);
+        document.cookie = `${key}=${encodeURIComponent(defaultVal)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+      }
+      set({
+        values: PREFERENCE_DEFAULTS,
+        resolvedThemeMode: resolveThemeMode(PREFERENCE_DEFAULTS.theme_mode),
+      });
+    },
+  }));
+}
+
+function resolveThemeMode(mode: string): ResolvedThemeMode {
+  if (mode === "system") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
-
-  for (const key of PREFERENCE_KEYS) assignPreference(key);
-  return values;
+  return mode as ResolvedThemeMode;
 }
 
-export function PreferencesStoreProvider({
-  children,
-  initialValues,
-}: {
+// ─── Context ─────────────────────────────────────────────────────────────────
+
+type PreferencesStore = ReturnType<typeof createPreferencesStore>;
+
+const PreferencesContext = React.createContext<PreferencesStore | null>(null);
+
+// ─── Provider ────────────────────────────────────────────────────────────────
+
+interface PreferencesStoreProviderProps {
   children: React.ReactNode;
   initialValues: PreferenceValueMap;
-}) {
-  const [store] = useState<StoreApi<PreferencesState>>(() => createPreferencesStore(initialValues));
-
-  useEffect(() => {
-    store.setState({
-      values: readDomPreferences(),
-      resolvedThemeMode: document.documentElement.classList.contains("dark") ? "dark" : "light",
-      isSynced: true,
-    });
-  }, [store]);
-
-  useEffect(() => {
-    let unsubscribeMedia: (() => void) | undefined;
-
-    const subscribeForMode = (mode: PreferenceValueMap["theme_mode"]) => {
-      unsubscribeMedia?.();
-      unsubscribeMedia = undefined;
-
-      if (mode === "system") {
-        unsubscribeMedia = subscribeToSystemTheme(() => {
-          store.setState({ resolvedThemeMode: applyThemeMode("system") });
-        });
-      }
-    };
-
-    subscribeForMode(store.getState().values.theme_mode);
-
-    const unsubscribeStore = store.subscribe((state, previousState) => {
-      if (state.values.theme_mode !== previousState.values.theme_mode) {
-        subscribeForMode(state.values.theme_mode);
-      }
-    });
-
-    return () => {
-      unsubscribeMedia?.();
-      unsubscribeStore();
-    };
-  }, [store]);
-
-  return <PreferencesStoreContext.Provider value={store}>{children}</PreferencesStoreContext.Provider>;
 }
 
+export function PreferencesStoreProvider({ children, initialValues }: PreferencesStoreProviderProps) {
+  const storeRef = React.useRef<PreferencesStore>(null);
+  if (!storeRef.current) {
+    storeRef.current = createPreferencesStore(initialValues);
+  }
+
+  return <PreferencesContext value={storeRef.current}>{children}</PreferencesContext>;
+}
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export function usePreferencesStore<T>(selector: (state: PreferencesState) => T): T {
-  const store = use(PreferencesStoreContext);
-  if (!store) throw new Error("Missing PreferencesStoreProvider");
+  const store = React.use(PreferencesContext);
+  if (!store) throw new Error("usePreferencesStore must be used within PreferencesStoreProvider");
   return useStore(store, selector);
 }
