@@ -5,7 +5,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Box, MoreHorizontal, Star } from "lucide-react";
+import { Box, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDeleteDialog } from "@/components/dashboard/confirm-delete-dialog";
@@ -94,17 +94,6 @@ function buildColumns(
       cell: ({ row }) => <span className="font-medium tabular-nums">{row.original.price}</span>,
     },
     {
-      accessorKey: "rating",
-      header: "Rating",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          <Star className="size-3.5 fill-amber-400 text-amber-400" />
-          <span className="text-sm tabular-nums">{row.original.rating.toFixed(1)}</span>
-          <span className="text-muted-foreground text-xs">({row.original.votes} Votes)</span>
-        </div>
-      ),
-    },
-    {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }) => (
@@ -118,12 +107,19 @@ function buildColumns(
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => onView(row.original.id)}>View product</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(row.original.id)}>Edit product</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onView(row.original.id)}>
+                  <Eye className="size-3.5" />
+                  View product
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(row.original.id)}>
+                  <Pencil className="size-3.5" />
+                  Edit product
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(row.original.id)}
                 >
+                  <Trash2 className="size-3.5" />
                   Delete
                 </DropdownMenuItem>
               </DropdownMenuGroup>

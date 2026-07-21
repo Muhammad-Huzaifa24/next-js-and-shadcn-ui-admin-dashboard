@@ -11,7 +11,7 @@ export function LoginRedirect() {
 
   useEffect(() => {
     if (isAuthenticated()) {
-      router.replace("/dashboard/ecommerce");
+      router.replace("/dashboard");
     }
   }, [router]);
 

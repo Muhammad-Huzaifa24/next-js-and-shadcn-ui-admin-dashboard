@@ -40,7 +40,7 @@ export function LoginForm() {
     storageRemove(STORAGE_KEYS.ORDERS);
     storageRemove(STORAGE_KEYS.CUSTOMERS);
     toast.success("Login successful", { description: `Welcome back, ${username}!` });
-    router.replace("/dashboard/ecommerce");
+    router.replace("/dashboard");
   }
 
   return (

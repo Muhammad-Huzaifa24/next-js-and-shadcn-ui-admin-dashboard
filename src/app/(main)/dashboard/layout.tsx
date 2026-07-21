@@ -1,9 +1,13 @@
 import type { ReactNode } from "react";
 
 import { cookies } from "next/headers";
+import Link from "next/link";
+
+import { ExternalLink } from "lucide-react";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
@@ -57,6 +61,11 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
                   <SearchDialog />
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button asChild size="icon" variant="outline" aria-label="Open client site">
+                    <Link href="https://boty-ecommerce-template-bay-six.vercel.app/" target="_blank" rel="noreferrer">
+                      <ExternalLink className="size-4" />
+                    </Link>
+                  </Button>
                   <LayoutControls />
                   <ThemeSwitcher />
                   <UserMenu />
