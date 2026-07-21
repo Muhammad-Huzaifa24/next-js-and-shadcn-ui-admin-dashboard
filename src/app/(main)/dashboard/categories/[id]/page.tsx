@@ -40,7 +40,7 @@ export default function CategoryDetailPage({ params }: Props) {
       toast.error("Category name is required.");
       return;
     }
-    updateCategory(category.id, { name: values.name.trim(), image: values.image });
+    updateCategory(category!.id, { name: values.name.trim(), image: values.image });
     toast.success("Category saved.");
   }
 
