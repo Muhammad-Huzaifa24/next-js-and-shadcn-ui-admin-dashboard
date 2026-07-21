@@ -3,6 +3,7 @@
 import * as React from "react";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { FolderOpen, MoreHorizontal } from "lucide-react";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { type CategoryItem, useCategories } from "@/store/categories-context";
+import { useProducts } from "@/store/products-context";
 
 function buildColumns(onDelete: (id: string) => void): ColumnDef<CategoryItem>[] {
   return [
@@ -52,14 +54,19 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<CategoryItem>[]
       header: "Category",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex size-9 shrink-0 items-center justify-center rounded-md font-bold text-white/90 text-xs",
-              row.original.color,
-            )}
-          >
-            {row.original.initials}
-          </div>
+          {row.original.image ? (
+            // biome-ignore lint/performance/noImgElement: base64 preview
+            <img src={row.original.image} alt={row.original.name} className="size-9 shrink-0 rounded-md object-cover" />
+          ) : (
+            <div
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-md font-bold text-white/90 text-xs",
+                row.original.color,
+              )}
+            >
+              {row.original.initials}
+            </div>
+          )}
           <span className="font-medium">{row.original.name}</span>
         </div>
       ),
@@ -106,7 +113,10 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<CategoryItem>[]
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
-                  onClick={() => onDelete(row.original.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(row.original.id);
+                  }}
                 >
                   Delete
                 </DropdownMenuItem>
@@ -122,7 +132,19 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<CategoryItem>[]
 }
 
 export function CategoriesTable() {
-  const { categories, deleteCategory } = useCategories();
+  const router = useRouter();
+  const { categories, deleteCategory, bulkDeleteCategories } = useCategories();
+  const { products } = useProducts();
+
+  // Compute live product count per category
+  const categoriesWithCount = React.useMemo(
+    () =>
+      categories.map((cat) => ({
+        ...cat,
+        count: products.filter((p) => p.category.toLowerCase() === cat.name.toLowerCase()).length,
+      })),
+    [categories, products],
+  );
   const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string } | null>(null);
   const [clearTrigger, setClearTrigger] = React.useState(0);
 
@@ -137,7 +159,11 @@ export function CategoriesTable() {
 
   function confirmDeletion() {
     if (!deleteTarget) return;
-    for (const id of deleteTarget.ids) deleteCategory(id);
+    if (deleteTarget.ids.length === 1) {
+      deleteCategory(deleteTarget.ids[0]);
+    } else {
+      bulkDeleteCategories(deleteTarget.ids);
+    }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} categories` : "Category"} deleted`);
     setClearTrigger((n) => n + 1);
     setDeleteTarget(null);
@@ -151,7 +177,7 @@ export function CategoriesTable() {
   return (
     <>
       <DataTable
-        data={categories}
+        data={categoriesWithCount}
         columns={columns}
         searchColumn="name"
         searchPlaceholder="Search categories..."
@@ -165,6 +191,7 @@ export function CategoriesTable() {
         }
         onDeleteSelected={handleDeleteSelected}
         clearSelectionTrigger={clearTrigger}
+        onRowClick={(row) => router.push(`/dashboard/categories/${row.id}`)}
       />
       <ConfirmDeleteDialog
         open={!!deleteTarget}

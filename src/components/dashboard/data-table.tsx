@@ -190,7 +190,11 @@ export function DataTable<TData>({
                     key={row.id}
                     data-state={row.getIsSelected() ? "selected" : undefined}
                     className={onRowClick ? "cursor-pointer" : undefined}
-                    onClick={() => onRowClick?.(row.original)}
+                    onClick={(e) => {
+                      const target = e.target as HTMLElement;
+                      if (target.closest("button,a,input,[role=menuitem],[role=checkbox]")) return;
+                      onRowClick?.(row.original);
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>

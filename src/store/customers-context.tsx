@@ -21,6 +21,7 @@ interface CustomersContextValue {
   addCustomer: (c: Omit<CustomerRow, "id">) => void;
   updateCustomer: (id: string, patch: Partial<CustomerRow>) => void;
   deleteCustomer: (id: string) => void;
+  bulkDeleteCustomers: (ids: string[]) => void;
 }
 
 const CustomersContext = React.createContext<CustomersContextValue | null>(null);
@@ -47,8 +48,15 @@ export function CustomersProvider({ children }: { children: React.ReactNode }) {
     persist(customers.filter((c) => c.id !== id));
   }
 
+  function bulkDeleteCustomers(ids: string[]) {
+    const set = new Set(ids);
+    persist(customers.filter((c) => !set.has(c.id)));
+  }
+
   return (
-    <CustomersContext value={{ customers, addCustomer, updateCustomer, deleteCustomer }}>{children}</CustomersContext>
+    <CustomersContext value={{ customers, addCustomer, updateCustomer, deleteCustomer, bulkDeleteCustomers }}>
+      {children}
+    </CustomersContext>
   );
 }
 

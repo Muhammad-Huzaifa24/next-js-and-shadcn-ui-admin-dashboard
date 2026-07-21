@@ -167,7 +167,7 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<OrderRow>[] {
 }
 
 export function OrdersTable() {
-  const { orders, deleteOrder } = useOrders();
+  const { orders, deleteOrder, bulkDeleteOrders } = useOrders();
   const [selectedOrder, setSelectedOrder] = React.useState<OrderRow | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string } | null>(null);
   const [clearTrigger, setClearTrigger] = React.useState(0);
@@ -182,7 +182,11 @@ export function OrdersTable() {
 
   function confirmDeletion() {
     if (!deleteTarget) return;
-    for (const id of deleteTarget.ids) deleteOrder(id);
+    if (deleteTarget.ids.length === 1) {
+      deleteOrder(deleteTarget.ids[0]);
+    } else {
+      bulkDeleteOrders(deleteTarget.ids);
+    }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} orders` : "Order"} deleted`);
     setClearTrigger((n) => n + 1);
     setDeleteTarget(null);

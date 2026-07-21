@@ -6,8 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { APP_CONFIG } from "@/config/app-config";
 import { fontVars } from "@/lib/fonts/registry";
-import { PREFERENCE_DEFAULTS } from "@/lib/preferences/preferences-config";
-import { ThemeBootScript } from "@/scripts/theme-boot";
+import { PREFERENCE_DEFAULTS, PREFERENCE_KEYS, PREFERENCE_REGISTRY } from "@/lib/preferences/preferences-config";
 import { PreferencesStoreProvider } from "@/stores/preferences/preferences-provider";
 
 import "./globals.css";
@@ -20,6 +19,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   const { theme_mode, theme_preset, content_layout, navbar_style, sidebar_variant, sidebar_collapsible, font } =
     PREFERENCE_DEFAULTS;
+
+  const registry = Object.fromEntries(
+    PREFERENCE_KEYS.map((key) => [
+      key,
+      {
+        attribute: PREFERENCE_REGISTRY[key].attribute,
+        defaultValue: PREFERENCE_REGISTRY[key].defaultValue,
+        values: [...PREFERENCE_REGISTRY[key].values],
+      },
+    ]),
+  );
+
+  const themeScript = `(function(){try{var c=document.cookie.split(";").reduce(function(a,x){var p=x.trim().split("=");a[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||"");return a},{});var r=${JSON.stringify(registry)};var h=document.documentElement;Object.keys(r).forEach(function(k){var d=r[k];var v=c[k]&&d.values.includes(c[k])?c[k]:d.defaultValue;h.setAttribute(d.attribute,v);});}catch(e){}})();`;
   return (
     <html
       lang="en"
@@ -33,8 +45,8 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       suppressHydrationWarning
     >
       <head>
-        {/* Applies theme and layout preferences on load to avoid flicker and unnecessary server rerenders. */}
-        <ThemeBootScript />
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static anti-flicker script */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className={`${fontVars} min-h-screen antialiased`}>
         <TooltipProvider>

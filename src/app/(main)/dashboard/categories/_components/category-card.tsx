@@ -11,16 +11,21 @@ export function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       href={`/dashboard/categories/${category.id}`}
-      className="group relative overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group relative cursor-pointer overflow-hidden rounded-xl border bg-card transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div
-        className={cn(
-          "flex h-44 items-center justify-center font-bold text-4xl text-white/80 tracking-tight",
-          category.color,
-        )}
-      >
-        {category.initials}
-      </div>
+      {category.image ? (
+        // biome-ignore lint/performance/noImgElement: base64 preview
+        <img src={category.image} alt={category.name} className="h-44 w-full object-cover" />
+      ) : (
+        <div
+          className={cn(
+            "flex h-44 items-center justify-center font-bold text-4xl text-white/80 tracking-tight",
+            category.color,
+          )}
+        >
+          {category.initials}
+        </div>
+      )}
       <div className="absolute top-3 right-3 rounded-md bg-background/80 px-2 py-0.5 font-medium text-xs ring-1 ring-foreground/10 backdrop-blur-sm">
         {category.count} {category.unit}
       </div>

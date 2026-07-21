@@ -2,6 +2,8 @@
 
 import * as React from "react";
 
+import { useRouter } from "next/navigation";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { Box, MoreHorizontal, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -25,7 +27,11 @@ import { ProductModal } from "./product-modal";
 
 export type { ProductRow };
 
-function buildColumns(onDelete: (id: string) => void): ColumnDef<ProductRow>[] {
+function buildColumns(
+  onDelete: (id: string) => void,
+  onEdit: (id: string) => void,
+  onView: (id: string) => void,
+): ColumnDef<ProductRow>[] {
   return [
     {
       id: "select",
@@ -52,9 +58,18 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<ProductRow>[] {
       header: "Product",
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted font-medium text-muted-foreground text-xs">
-            {row.original.name.slice(0, 2).toUpperCase()}
-          </div>
+          {row.original.images?.[0] ? (
+            // biome-ignore lint/performance/noImgElement: base64 preview
+            <img
+              src={row.original.images[0]}
+              alt={row.original.name}
+              className="size-10 shrink-0 rounded-md object-cover"
+            />
+          ) : (
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted font-medium text-muted-foreground text-xs">
+              {row.original.name.slice(0, 2).toUpperCase()}
+            </div>
+          )}
           <div className="flex flex-col gap-0.5">
             <span className="font-medium leading-none">{row.original.name}</span>
             <span className="text-muted-foreground text-xs">{row.original.category}</span>
@@ -103,9 +118,8 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<ProductRow>[] {
             <DropdownMenuContent align="end" className="w-40">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuGroup>
-                <DropdownMenuItem>View product</DropdownMenuItem>
-                <DropdownMenuItem>Edit product</DropdownMenuItem>
-                <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onView(row.original.id)}>View product</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(row.original.id)}>Edit product</DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-destructive focus:text-destructive"
                   onClick={() => onDelete(row.original.id)}
@@ -124,7 +138,8 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<ProductRow>[] {
 }
 
 export function ProductsTable() {
-  const { products, deleteProduct } = useProducts();
+  const router = useRouter();
+  const { products, deleteProduct, bulkDeleteProducts } = useProducts();
   const [selectedProduct, setSelectedProduct] = React.useState<ProductRow | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string } | null>(null);
   const [clearTrigger, setClearTrigger] = React.useState(0);
@@ -140,7 +155,11 @@ export function ProductsTable() {
 
   function confirmDeletion() {
     if (!deleteTarget) return;
-    for (const id of deleteTarget.ids) deleteProduct(id);
+    if (deleteTarget.ids.length === 1) {
+      deleteProduct(deleteTarget.ids[0]);
+    } else {
+      bulkDeleteProducts(deleteTarget.ids);
+    }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} products` : "Product"} deleted`);
     setClearTrigger((n) => n + 1);
     setDeleteTarget(null);
@@ -150,7 +169,26 @@ export function ProductsTable() {
   const handleDeleteRef = React.useRef(handleDelete);
   handleDeleteRef.current = handleDelete;
 
-  const columns = React.useMemo(() => buildColumns((id) => handleDeleteRef.current(id)), []);
+  const handleViewRef = React.useRef((id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (product) setSelectedProduct(product);
+  });
+  handleViewRef.current = (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (product) setSelectedProduct(product);
+  };
+
+  const handleEditRef = React.useRef((id: string) => router.push(`/dashboard/products/edit/${id}`));
+
+  const columns = React.useMemo(
+    () =>
+      buildColumns(
+        (id) => handleDeleteRef.current(id),
+        (id) => handleEditRef.current(id),
+        (id) => handleViewRef.current(id),
+      ),
+    [],
+  );
 
   return (
     <>

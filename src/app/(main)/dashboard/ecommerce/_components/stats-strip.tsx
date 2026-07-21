@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import { ArrowUpRight, Box, DollarSign, FolderOpen, ShoppingCart, Users } from "lucide-react";
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,42 +16,51 @@ export function StatsStrip() {
   const { orders } = useOrders();
   const { customers } = useCustomers();
 
-  // Compute total revenue by summing order totals (strip "$" and commas)
-  const totalRevenue = orders.reduce((sum, o) => {
-    const n = parseFloat(o.total.replace(/[$,]/g, ""));
-    return sum + (Number.isNaN(n) ? 0 : n);
-  }, 0);
+  // Defer to client to avoid SSR/client hydration mismatch (localStorage only on client)
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const totalRevenue = mounted
+    ? orders.reduce((sum, o) => {
+        const n = parseFloat(o.total.replace(/[$,]/g, ""));
+        return sum + (Number.isNaN(n) ? 0 : n);
+      }, 0)
+    : 0;
 
   const stats = [
     {
       title: "Total Revenue",
-      value: `$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      value: mounted
+        ? `$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : "$0.00",
       icon: DollarSign,
-      sub: `${orders.length} orders`,
+      sub: `${mounted ? orders.length : 0} orders`,
     },
     {
       title: "Total Orders",
-      value: orders.length.toLocaleString(),
+      value: mounted ? orders.length.toLocaleString() : "0",
       icon: ShoppingCart,
-      sub: `${orders.filter((o) => o.status === "Ready").length} pending`,
+      sub: `${mounted ? orders.filter((o) => o.status === "Ready").length : 0} pending`,
     },
     {
       title: "Total Products",
-      value: products.length.toLocaleString(),
+      value: mounted ? products.length.toLocaleString() : "0",
       icon: Box,
-      sub: `${products.filter((p) => p.inventory < 20).length} low stock`,
+      sub: `${mounted ? products.filter((p) => p.inventory < 20).length : 0} low stock`,
     },
     {
       title: "Total Categories",
-      value: categories.length.toLocaleString(),
+      value: mounted ? categories.length.toLocaleString() : "0",
       icon: FolderOpen,
-      sub: `${categories.length} active`,
+      sub: `${mounted ? categories.length : 0} active`,
     },
     {
       title: "Total Customers",
-      value: customers.length.toLocaleString(),
+      value: mounted ? customers.length.toLocaleString() : "0",
       icon: Users,
-      sub: `${customers.filter((c) => c.segment === "new").length} new`,
+      sub: `${mounted ? customers.filter((c) => c.segment === "new").length : 0} new`,
     },
   ];
 

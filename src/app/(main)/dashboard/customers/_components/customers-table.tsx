@@ -151,7 +151,7 @@ function preventNav(e: React.MouseEvent<HTMLAnchorElement>) {
 }
 
 export function CustomersTable() {
-  const { customers, deleteCustomer } = useCustomers();
+  const { customers, deleteCustomer, bulkDeleteCustomers } = useCustomers();
   const [activeSegment, setActiveSegment] = React.useState("all");
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -171,7 +171,11 @@ export function CustomersTable() {
 
   function confirmDeletion() {
     if (!deleteTarget) return;
-    for (const id of deleteTarget.ids) deleteCustomer(id);
+    if (deleteTarget.ids.length === 1) {
+      deleteCustomer(deleteTarget.ids[0]);
+    } else {
+      bulkDeleteCustomers(deleteTarget.ids);
+    }
     if (deleteTarget.ids.length > 1) setRowSelection({});
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} customers` : "Customer"} deleted`);
     setDeleteTarget(null);

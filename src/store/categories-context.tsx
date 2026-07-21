@@ -12,6 +12,7 @@ export type CategoryItem = {
   unit: string;
   color: string;
   initials: string;
+  image?: string; // base64 data URL
 };
 
 interface CategoriesContextValue {
@@ -19,6 +20,7 @@ interface CategoriesContextValue {
   addCategory: (cat: Omit<CategoryItem, "id">) => void;
   updateCategory: (id: string, patch: Partial<CategoryItem>) => void;
   deleteCategory: (id: string) => void;
+  bulkDeleteCategories: (ids: string[]) => void;
 }
 
 const CategoriesContext = React.createContext<CategoriesContextValue | null>(null);
@@ -45,8 +47,13 @@ export function CategoriesProvider({ children }: { children: React.ReactNode }) 
     persist(categories.filter((c) => c.id !== id));
   }
 
+  function bulkDeleteCategories(ids: string[]) {
+    const set = new Set(ids);
+    persist(categories.filter((c) => !set.has(c.id)));
+  }
+
   return (
-    <CategoriesContext value={{ categories, addCategory, updateCategory, deleteCategory }}>
+    <CategoriesContext value={{ categories, addCategory, updateCategory, deleteCategory, bulkDeleteCategories }}>
       {children}
     </CategoriesContext>
   );

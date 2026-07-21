@@ -14,5 +14,6 @@ const registry = Object.fromEntries(
 const scriptContent = `(function(){try{var c=document.cookie.split(";").reduce(function(a,x){var p=x.trim().split("=");a[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||"");return a},{});var r=${JSON.stringify(registry)};var h=document.documentElement;Object.keys(r).forEach(function(k){var d=r[k];var v=c[k]&&d.values.includes(c[k])?c[k]:d.defaultValue;h.setAttribute(d.attribute,v);});}catch(e){}})();`;
 
 export function ThemeBootScript() {
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: static build-time anti-flicker script, no user input
   return <script dangerouslySetInnerHTML={{ __html: scriptContent }} />;
 }

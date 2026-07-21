@@ -19,6 +19,7 @@ interface OrdersContextValue {
   addOrder: (order: Omit<OrderRow, "id">) => void;
   updateOrder: (id: string, patch: Partial<OrderRow>) => void;
   deleteOrder: (id: string) => void;
+  bulkDeleteOrders: (ids: string[]) => void;
 }
 
 const OrdersContext = React.createContext<OrdersContextValue | null>(null);
@@ -45,7 +46,14 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     persist(orders.filter((o) => o.id !== id));
   }
 
-  return <OrdersContext value={{ orders, addOrder, updateOrder, deleteOrder }}>{children}</OrdersContext>;
+  function bulkDeleteOrders(ids: string[]) {
+    const set = new Set(ids);
+    persist(orders.filter((o) => !set.has(o.id)));
+  }
+
+  return (
+    <OrdersContext value={{ orders, addOrder, updateOrder, deleteOrder, bulkDeleteOrders }}>{children}</OrdersContext>
+  );
 }
 
 export function useOrders(): OrdersContextValue {

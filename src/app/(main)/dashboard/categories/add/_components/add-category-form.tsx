@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { useRouter } from "next/navigation";
 
+import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,15 @@ export function AddCategoryForm() {
   const [description, setDescription] = React.useState("");
   const [color, setColor] = React.useState(COLOR_OPTIONS[0].value);
   const [visible, setVisible] = React.useState(true);
+  const [image, setImage] = React.useState<string>("");
+
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
 
   const initials =
     name
@@ -55,6 +65,7 @@ export function AddCategoryForm() {
       unit: "items",
       color,
       initials,
+      image: image || undefined,
     });
 
     toast.success(`"${name.trim()}" created`);
@@ -121,6 +132,46 @@ export function AddCategoryForm() {
               </p>
             </CardContent>
           </Card>
+
+          {/* Image upload */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Image</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {image ? (
+                <div className="group relative overflow-hidden rounded-lg border">
+                  {/* biome-ignore lint/performance/noImgElement: base64 preview */}
+                  <img src={image} alt="Category preview" className="h-36 w-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      type="button"
+                      onClick={() => setImage("")}
+                      className="rounded-md bg-destructive px-3 py-1 text-destructive-foreground text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label
+                  htmlFor="add-cat-image"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:bg-muted/40"
+                >
+                  <Upload className="size-4" />
+                  <span className="font-medium text-foreground text-sm">Add File</span>
+                  <span className="text-xs">Or drag and drop files</span>
+                  <input
+                    id="add-cat-image"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Right column */}
@@ -131,11 +182,16 @@ export function AddCategoryForm() {
               <CardTitle className="text-base">Preview</CardTitle>
             </CardHeader>
             <CardContent className="p-0 pb-4">
-              <div
-                className={`flex h-36 items-center justify-center rounded-t-md font-bold text-3xl text-white/80 ${color}`}
-              >
-                {initials}
-              </div>
+              {image ? (
+                // biome-ignore lint/performance/noImgElement: base64 preview
+                <img src={image} alt="Preview" className="h-36 w-full rounded-t-md object-cover" />
+              ) : (
+                <div
+                  className={`flex h-36 items-center justify-center rounded-t-md font-bold text-3xl text-white/80 ${color}`}
+                >
+                  {initials}
+                </div>
+              )}
               <div className="px-4 pt-3">
                 <p className="font-medium leading-none">{name || "Category Name"}</p>
                 <p className="mt-1 text-muted-foreground text-xs">0 items</p>
