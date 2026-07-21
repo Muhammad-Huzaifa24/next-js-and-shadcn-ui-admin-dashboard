@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { RichTextEditor } from "@/components/dashboard/rich-text-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,7 +131,7 @@ export function AddProductForm() {
   }
 
   // ── Category toggle ───────────────────────────────────────
-  function toggleCategory(name: string) {
+  function _toggleCategory(name: string) {
     setSelectedCategories((prev) => (prev.includes(name) ? prev.filter((c) => c !== name) : [...prev, name]));
   }
 
@@ -190,7 +191,7 @@ export function AddProductForm() {
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="product-name">
-                  Product Name <span className="text-destructive">*</span>
+                  Title <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="product-name"
@@ -202,14 +203,7 @@ export function AddProductForm() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="product-desc">Product Description</Label>
-                <Textarea
-                  id="product-desc"
-                  placeholder="Describe your product..."
-                  rows={4}
-                  className="resize-none"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
+                <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product..." />
               </div>
             </CardContent>
           </Card>
@@ -218,7 +212,7 @@ export function AddProductForm() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Images
+                Media
                 <span className="ml-2 font-normal text-muted-foreground text-xs">
                   ({images.length}/{MAX_IMAGES})
                 </span>
@@ -228,7 +222,7 @@ export function AddProductForm() {
               {images.length < MAX_IMAGES && (
                 <label
                   htmlFor="file-upload"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:bg-muted/40"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-border border-dashed py-10 text-muted-foreground transition-colors hover:bg-muted/40"
                   onDrop={handleDrop}
                   onDragOver={(e) => e.preventDefault()}
                 >
@@ -249,13 +243,13 @@ export function AddProductForm() {
 
               {images.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {images.map((src, i) => (
-                    <div
-                      key={src.slice(-20)}
-                      className="group relative overflow-hidden rounded-lg border bg-muted aspect-square"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={src} alt={`${i + 1}`} className="h-full w-full object-cover" />
+                    {images.map((src, i) => (
+                      <div
+                        key={src.slice(-20)}
+                        className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+                      >
+                        {/* biome-ignore lint/performance/noImgElement: base64 preview */}
+                        <img src={src} alt={`${i + 1}`} className="h-full w-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button
                           type="button"
@@ -275,10 +269,10 @@ export function AddProductForm() {
                   {/* Empty slots */}
                   {Array.from({ length: MAX_IMAGES - images.length }).map((_, i) => (
                     <button
-                      key={`empty-${i}`}
+                      key={`empty-${images.length + i}`}
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:bg-muted/40"
+                      className="flex aspect-square items-center justify-center rounded-lg border-2 border-border border-dashed text-muted-foreground transition-colors hover:bg-muted/40"
                     >
                       <ImageIcon className="size-5" />
                     </button>
@@ -348,7 +342,7 @@ export function AddProductForm() {
               {hasOptions && (
                 <div className="flex flex-col gap-4">
                   {options.map((opt, i) => (
-                    <div key={`${opt.type}-${i}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                    <div key={`${opt.type}-${i}-${opt.values.join(",")}`} className="flex flex-col gap-3 rounded-lg border p-3">
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm">Option {i + 1}</p>
                         {options.length > 1 && (
@@ -385,7 +379,7 @@ export function AddProductForm() {
                           <Label>Values</Label>
                           <div className="flex min-h-8 flex-wrap gap-1.5 rounded-lg border border-input bg-transparent px-2.5 py-1.5">
                             {opt.values.map((v) => (
-                              <Badge key={v} variant="secondary" className="gap-1 cursor-default">
+                              <Badge key={v} variant="secondary" className="cursor-default gap-1">
                                 {v}
                                 <button
                                   type="button"
@@ -603,25 +597,6 @@ export function AddProductForm() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="hidden justify-end gap-2 xl:flex">
-            <Button type="button" variant="outline" size="sm" onClick={() => router.push("/dashboard/products")}>
-              Cancel
-            </Button>
-            <Button type="submit" size="sm">
-              Save Product
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile actions */}
-        <div className="flex justify-end gap-2 xl:hidden">
-          <Button type="button" variant="outline" size="sm" onClick={() => router.push("/dashboard/products")}>
-            Cancel
-          </Button>
-          <Button type="submit" size="sm">
-            Save Product
-          </Button>
         </div>
       </div>
     </form>

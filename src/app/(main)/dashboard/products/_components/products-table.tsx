@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { type ProductRow, useProducts } from "@/store/products-context";
 
-import { ProductModal } from "./product-modal";
-
 export type { ProductRow };
 
 function buildColumns(
@@ -95,9 +93,9 @@ function buildColumns(
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Actions</div>,
+      header: "Actions",
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex">
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button aria-label="Product actions" size="icon-sm" variant="ghost">
@@ -136,7 +134,6 @@ function buildColumns(
 export function ProductsTable() {
   const router = useRouter();
   const { products, deleteProduct, bulkDeleteProducts } = useProducts();
-  const [selectedProduct, setSelectedProduct] = React.useState<ProductRow | null>(null);
   const [deleteTarget, setDeleteTarget] = React.useState<{ ids: string[]; label: string } | null>(null);
   const [clearTrigger, setClearTrigger] = React.useState(0);
 
@@ -165,14 +162,8 @@ export function ProductsTable() {
   const handleDeleteRef = React.useRef(handleDelete);
   handleDeleteRef.current = handleDelete;
 
-  const handleViewRef = React.useRef((id: string) => {
-    const product = products.find((p) => p.id === id);
-    if (product) setSelectedProduct(product);
-  });
-  handleViewRef.current = (id: string) => {
-    const product = products.find((p) => p.id === id);
-    if (product) setSelectedProduct(product);
-  };
+  const handleViewRef = React.useRef((id: string) => router.push(`/dashboard/products/${id}`));
+  handleViewRef.current = (id: string) => router.push(`/dashboard/products/${id}`);
 
   const handleEditRef = React.useRef((id: string) => router.push(`/dashboard/products/edit/${id}`));
 
@@ -199,11 +190,10 @@ export function ProductsTable() {
         emptyState={
           <EmptyState icon={Box} title="No products yet" description="Add your first product to get started." />
         }
-        onRowClick={setSelectedProduct}
+        onRowClick={(row) => router.push(`/dashboard/products/${row.id}`)}
         onDeleteSelected={handleDeleteSelected}
         clearSelectionTrigger={clearTrigger}
       />
-      <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
       <ConfirmDeleteDialog
         open={!!deleteTarget}
         label={deleteTarget?.label ?? ""}

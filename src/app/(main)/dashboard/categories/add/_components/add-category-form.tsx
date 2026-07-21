@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,7 +72,7 @@ export function AddCategoryForm() {
   }
 
   return (
-    <form onSubmit={handleSave}>
+    <form id="add-category-form" onSubmit={handleSave}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {/* Left column */}
         <div className="flex flex-col gap-4 xl:col-span-2">
@@ -156,7 +155,7 @@ export function AddCategoryForm() {
               ) : (
                 <label
                   htmlFor="add-cat-image"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:bg-muted/40"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-border border-dashed py-8 text-muted-foreground transition-colors hover:bg-muted/40"
                 >
                   <Upload className="size-4" />
                   <span className="font-medium text-foreground text-sm">Add File</span>
@@ -213,15 +212,6 @@ export function AddCategoryForm() {
               </div>
             </CardContent>
           </Card>
-
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => router.push("/dashboard/categories")}>
-              Cancel
-            </Button>
-            <Button type="submit" size="sm">
-              Save
-            </Button>
-          </div>
         </div>
       </div>
     </form>

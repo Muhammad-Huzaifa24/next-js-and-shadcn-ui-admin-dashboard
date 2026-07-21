@@ -85,7 +85,7 @@ export function CategoryInfoPanel({ category, panelRef }: CategoryInfoPanelProps
             ) : (
               <label
                 htmlFor="cat-image"
-                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-8 text-muted-foreground transition-colors hover:bg-muted/40"
+                className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-border border-dashed py-8 text-muted-foreground transition-colors hover:bg-muted/40"
               >
                 <Upload className="size-4" />
                 <span className="font-medium text-foreground text-sm">Add File</span>

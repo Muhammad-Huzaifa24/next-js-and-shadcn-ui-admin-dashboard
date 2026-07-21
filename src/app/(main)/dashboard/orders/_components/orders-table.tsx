@@ -134,9 +134,9 @@ function buildColumns(onDelete: (id: string) => void): ColumnDef<OrderRow>[] {
     },
     {
       id: "actions",
-      header: () => <div className="text-right">Actions</div>,
+      header: "Actions",
       cell: ({ row }) => (
-        <div className="flex justify-end">
+        <div className="flex">
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button aria-label="Order actions" size="icon-sm" variant="ghost">

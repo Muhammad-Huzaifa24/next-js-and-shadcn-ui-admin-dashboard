@@ -23,7 +23,7 @@ export function PageHeader({ title, actions, back = true }: PageHeaderProps) {
         <button
           type="button"
           onClick={() => router.back()}
-          className="flex w-fit cursor-pointer items-center gap-1 text-muted-foreground text-sm hover:text-foreground transition-colors"
+          className="flex w-fit cursor-pointer items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           Back

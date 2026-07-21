@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ImageIcon, Plus, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { RichTextEditor } from "@/components/dashboard/rich-text-editor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -133,7 +134,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       name: name.trim(),
       description: description.trim(),
       category: selectedCategories[0],
-      color: options.find((o) => o.type === "Color")?.values[0] ?? product!.color,
+      color: options.find((o) => o.type === "Color")?.values[0] ?? product?.color,
       price: `$${Number(price).toFixed(2)}`,
       discountPrice: discountPrice ? `$${Number(discountPrice).toFixed(2)}` : "",
       hasTax,
@@ -163,7 +164,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="product-name">
-                  Product Name <span className="text-destructive">*</span>
+                  Title <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="product-name"
@@ -175,14 +176,7 @@ export function EditProductForm({ productId }: { productId: string }) {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="product-desc">Product Description</Label>
-                <Textarea
-                  id="product-desc"
-                  placeholder="Describe your product..."
-                  rows={4}
-                  className="resize-none"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
+                <RichTextEditor value={description} onChange={setDescription} placeholder="Describe your product..." />
               </div>
             </CardContent>
           </Card>
@@ -191,7 +185,7 @@ export function EditProductForm({ productId }: { productId: string }) {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
-                Images{" "}
+                Media{" "}
                 <span className="ml-2 font-normal text-muted-foreground text-xs">
                   ({images.length}/{MAX_IMAGES})
                 </span>
@@ -201,7 +195,7 @@ export function EditProductForm({ productId }: { productId: string }) {
               {images.length < MAX_IMAGES && (
                 <label
                   htmlFor="file-upload"
-                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-10 text-muted-foreground transition-colors hover:bg-muted/40"
+                  className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-border border-dashed py-10 text-muted-foreground transition-colors hover:bg-muted/40"
                   onDrop={(e) => {
                     e.preventDefault();
                     handleFiles(e.dataTransfer.files);
@@ -249,10 +243,10 @@ export function EditProductForm({ productId }: { productId: string }) {
                   ))}
                   {Array.from({ length: MAX_IMAGES - images.length }).map((_, i) => (
                     <button
-                      key={`empty-${i}`}
+                      key={`empty-${images.length + i}`}
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-border text-muted-foreground transition-colors hover:bg-muted/40"
+                      className="flex aspect-square items-center justify-center rounded-lg border-2 border-border border-dashed text-muted-foreground transition-colors hover:bg-muted/40"
                     >
                       <ImageIcon className="size-5" />
                     </button>
@@ -321,7 +315,7 @@ export function EditProductForm({ productId }: { productId: string }) {
               {hasOptions && (
                 <div className="flex flex-col gap-4">
                   {options.map((opt, i) => (
-                    <div key={`${opt.type}-${i}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                    <div key={`${opt.type}-${i}-${opt.values.join(",")}`} className="flex flex-col gap-3 rounded-lg border p-3">
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm">Option {i + 1}</p>
                         {options.length > 1 && (

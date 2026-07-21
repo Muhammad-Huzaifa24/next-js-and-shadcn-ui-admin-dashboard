@@ -3,7 +3,6 @@
 import * as React from "react";
 import { use } from "react";
 
-import Link from "next/link";
 import { notFound, useRouter } from "next/navigation";
 
 import { ArrowLeft } from "lucide-react";
@@ -40,7 +39,7 @@ export default function CategoryDetailPage({ params }: Props) {
       toast.error("Category name is required.");
       return;
     }
-    updateCategory(category!.id, { name: values.name.trim(), image: values.image });
+    updateCategory(category?.id, { name: values.name.trim(), image: values.image });
     toast.success("Category saved.");
   }
 
@@ -48,12 +47,14 @@ export default function CategoryDetailPage({ params }: Props) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-1">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit text-muted-foreground">
-            <Link href="/dashboard/categories">
-              <ArrowLeft className="size-3.5" />
-              Back
-            </Link>
-          </Button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="flex w-fit cursor-pointer items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" />
+            Back
+          </button>
           <h1 className="text-3xl leading-none tracking-tight">{category.name}</h1>
         </div>
         <div className="flex items-center gap-2">

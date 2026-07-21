@@ -19,6 +19,14 @@ export default function AddCategoryPage() {
           </Button>
           <h1 className="text-3xl leading-none tracking-tight">Add Category</h1>
         </div>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/dashboard/categories">Cancel</Link>
+          </Button>
+          <Button type="submit" form="add-category-form" size="sm">
+            Save
+          </Button>
+        </div>
       </div>
       <AddCategoryForm />
     </div>

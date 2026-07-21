@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 
 import { Eye, Pencil, Trash2 } from "lucide-react";
 
-import { ProductModal } from "@/app/(main)/dashboard/products/_components/product-modal";
 import { ConfirmDeleteDialog } from "@/components/dashboard/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { type ProductRow, useProducts } from "@/store/products-context";
@@ -20,7 +19,6 @@ export function CategoryProductsList({ products }: CategoryProductsListProps) {
   const { deleteProduct } = useProducts();
 
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
-  const [viewProduct, setViewProduct] = React.useState<ProductRow | null>(null);
 
   function confirmDeletion() {
     if (!deleteTarget) return;
@@ -76,7 +74,7 @@ export function CategoryProductsList({ products }: CategoryProductsListProps) {
                     size="icon-sm"
                     variant="ghost"
                     aria-label={`View ${product.name}`}
-                    onClick={() => setViewProduct(product)}
+                    onClick={() => router.push(`/dashboard/products/${product.id}`)}
                   >
                     <Eye className="size-3.5" />
                   </Button>
@@ -107,9 +105,6 @@ export function CategoryProductsList({ products }: CategoryProductsListProps) {
           </ul>
         )}
       </div>
-
-      {/* View modal */}
-      <ProductModal product={viewProduct} onClose={() => setViewProduct(null)} />
 
       {/* Delete confirmation */}
       <ConfirmDeleteDialog
