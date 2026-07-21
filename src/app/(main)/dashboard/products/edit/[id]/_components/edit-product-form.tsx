@@ -133,7 +133,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       name: name.trim(),
       description: description.trim(),
       category: selectedCategories[0],
-      color: options.find((o) => o.type === "Color")?.values[0] ?? product.color,
+      color: options.find((o) => o.type === "Color")?.values[0] ?? product!.color,
       price: `$${Number(price).toFixed(2)}`,
       discountPrice: discountPrice ? `$${Number(discountPrice).toFixed(2)}` : "",
       hasTax,
