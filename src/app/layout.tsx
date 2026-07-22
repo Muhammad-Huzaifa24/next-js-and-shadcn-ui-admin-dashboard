@@ -1,7 +1,9 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 import type { Metadata } from "next";
 
+import { NavigationProgress } from "@/components/navigation-progress";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { APP_CONFIG } from "@/config/app-config";
@@ -31,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     ]),
   );
 
-  const themeScript = `(function(){try{var c=document.cookie.split(";").reduce(function(a,x){var p=x.trim().split("=");a[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||"");return a},{});var r=${JSON.stringify(registry)};var h=document.documentElement;Object.keys(r).forEach(function(k){var d=r[k];var v=c[k]&&d.values.includes(c[k])?c[k]:d.defaultValue;h.setAttribute(d.attribute,v);});}catch(e){}})();`;
+  const themeScript = `(function(){try{var c=document.cookie.split(";").reduce(function(a,x){var p=x.trim().split("=");a[decodeURIComponent(p[0])]=decodeURIComponent(p[1]||"");return a},{});var r=${JSON.stringify(registry)};var h=document.documentElement;Object.keys(r).forEach(function(k){var d=r[k];var v=c[k]&&d.values.includes(c[k])?c[k]:d.defaultValue;h.setAttribute(d.attribute,v);});var m=c["theme_mode"]||"light";var resolved=m==="system"?(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):m;h.classList.toggle("dark",resolved==="dark");}catch(e){}})();`;
   return (
     <html
       lang="en"
@@ -51,6 +53,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body className={`${fontVars} min-h-screen antialiased`}>
         <TooltipProvider>
           <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
+            <Suspense>
+              <NavigationProgress />
+            </Suspense>
             {children}
             <Toaster />
           </PreferencesStoreProvider>

@@ -179,7 +179,7 @@ export function AddProductForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form id="add-product-form" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         {/* ── Left column ── */}
         <div className="flex flex-col gap-4 xl:col-span-2">
@@ -243,13 +243,13 @@ export function AddProductForm() {
 
               {images.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                    {images.map((src, i) => (
-                      <div
-                        key={src.slice(-20)}
-                        className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
-                      >
-                        {/* biome-ignore lint/performance/noImgElement: base64 preview */}
-                        <img src={src} alt={`${i + 1}`} className="h-full w-full object-cover" />
+                  {images.map((src, i) => (
+                    <div
+                      key={src.slice(-20)}
+                      className="group relative aspect-square overflow-hidden rounded-lg border bg-muted"
+                    >
+                      {/* biome-ignore lint/performance/noImgElement: base64 preview */}
+                      <img src={src} alt={`${i + 1}`} className="h-full w-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                         <Button
                           type="button"
@@ -342,7 +342,10 @@ export function AddProductForm() {
               {hasOptions && (
                 <div className="flex flex-col gap-4">
                   {options.map((opt, i) => (
-                    <div key={`${opt.type}-${i}-${opt.values.join(",")}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                    <div
+                      key={`${opt.type}-${i}-${opt.values.join(",")}`}
+                      className="flex flex-col gap-3 rounded-lg border p-3"
+                    >
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm">Option {i + 1}</p>
                         {options.length > 1 && (

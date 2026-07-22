@@ -3,7 +3,7 @@
 import * as React from "react";
 import { use } from "react";
 
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
@@ -28,7 +28,12 @@ export default function CategoryDetailPage({ params }: Props) {
   const panelRef = React.useRef<CategoryInfoPanelRef | null>(null);
 
   const category = categories.find((c) => c.id === id);
-  if (!category) notFound();
+
+  React.useEffect(() => {
+    if (!category) router.back();
+  }, [category, router]);
+
+  if (!category) return null;
 
   const categoryProducts = products.filter((p) => p.category.toLowerCase() === category.name.toLowerCase());
 

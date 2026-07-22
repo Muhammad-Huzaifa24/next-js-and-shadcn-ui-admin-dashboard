@@ -23,7 +23,9 @@ export default function AddProductPage() {
           <Button variant="outline" size="sm" asChild>
             <Link href="/dashboard/products">Cancel</Link>
           </Button>
-          <Button size="sm">Save</Button>
+          <Button type="submit" form="add-product-form" size="sm">
+            Save
+          </Button>
         </div>
       </div>
       <AddProductForm />

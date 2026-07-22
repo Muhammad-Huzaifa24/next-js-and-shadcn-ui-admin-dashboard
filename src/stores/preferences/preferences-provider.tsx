@@ -33,6 +33,13 @@ function createPreferencesStore(initialValues: PreferenceValueMap) {
       // Apply to <html>
       document.documentElement.setAttribute(def.attribute, value);
 
+      // Sync dark class for Tailwind dark: variant
+      if (key === "theme_mode") {
+        const resolved =
+          value === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : value;
+        document.documentElement.classList.toggle("dark", resolved === "dark");
+      }
+
       // Persist as cookie
       document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 365}`;
 
@@ -83,6 +90,14 @@ export function PreferencesStoreProvider({ children, initialValues }: Preference
   if (!storeRef.current) {
     storeRef.current = createPreferencesStore(initialValues);
   }
+
+  // Apply dark class on mount based on persisted preference
+  React.useEffect(() => {
+    const mode = initialValues.theme_mode;
+    const resolved =
+      mode === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+    document.documentElement.classList.toggle("dark", resolved === "dark");
+  }, [initialValues.theme_mode]);
 
   return <PreferencesContext value={storeRef.current}>{children}</PreferencesContext>;
 }

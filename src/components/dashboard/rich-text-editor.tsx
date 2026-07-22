@@ -139,7 +139,7 @@ export function RichTextEditor({
             {placeholder}
           </p>
         )}
-        {/* biome-ignore lint/a11y/useSemanticElements: contentEditable div is the correct pattern for rich text */}
+        {/* biome-ignore lint/a11y/useSemanticElements: contentEditable div is correct for rich text editors */}
         <div
           ref={editorRef}
           contentEditable

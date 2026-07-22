@@ -1,9 +1,10 @@
 "use client";
 
+import * as React from "react";
 import { use } from "react";
 
 import Link from "next/link";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { ArrowLeft, Pencil, Tag } from "lucide-react";
 
@@ -22,7 +23,12 @@ export default function ViewProductPage({ params }: Props) {
   const { products } = useProducts();
 
   const product = products.find((p) => p.id === id);
-  if (!product) notFound();
+
+  React.useEffect(() => {
+    if (!product) router.back();
+  }, [product, router]);
+
+  if (!product) return null;
 
   return (
     <div className="flex flex-col gap-4">
