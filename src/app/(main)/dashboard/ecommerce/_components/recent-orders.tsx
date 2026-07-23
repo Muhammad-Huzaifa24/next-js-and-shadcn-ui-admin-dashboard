@@ -29,9 +29,9 @@ import {
 } from "@/components/ui/pagination";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { dashboardApi } from "@/lib/api";
 
 import { recentOrdersColumns } from "./recent-orders-table/columns";
-import recentOrdersData from "./recent-orders-table/data.json";
 import {
   formatOrderCount,
   formatSelectedOrderCount,
@@ -39,9 +39,30 @@ import {
 } from "./recent-orders-table/formatters";
 import { type OrderFilter, type OrderRow, orderFilters } from "./recent-orders-table/schema";
 
-const recentOrders = recentOrdersData as OrderRow[];
-
 export function RecentOrders() {
+  const [data, setData] = React.useState<OrderRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    dashboardApi
+      .recentOrders(20)
+      .then((res) => {
+        // Map API shape to the RecentOrdersTable OrderRow shape
+        const mapped: OrderRow[] = res.data.orders.map((o) => ({
+          id: o.id,
+          date: o.date,
+          customer: o.customer,
+          payment: o.payment,
+          total: o.total,
+          items: o.items,
+          fulfillment: o.fulfillment,
+        }));
+        setData(mapped);
+      })
+      .catch(() => setData([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   const [rowSelection, setRowSelection] = React.useState({});
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -51,14 +72,9 @@ export function RecentOrders() {
   });
 
   const table = useReactTable({
-    data: recentOrders,
+    data,
     columns: recentOrdersColumns,
-    state: {
-      rowSelection,
-      sorting,
-      columnFilters,
-      pagination,
-    },
+    state: { rowSelection, sorting, columnFilters, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
@@ -79,14 +95,11 @@ export function RecentOrders() {
   const pageCount = table.getPageCount();
   const orderCountDescription =
     selectedOrderCount > 0 ? formatSelectedOrderCount(selectedOrderCount) : formatOrderCount(activeFilter, orderCount);
-  const pageNumbers = React.useMemo(() => {
-    if (pageCount <= 3) {
-      return Array.from({ length: pageCount }, (_, index) => index + 1);
-    }
 
+  const pageNumbers = React.useMemo(() => {
+    if (pageCount <= 3) return Array.from({ length: pageCount }, (_, i) => i + 1);
     if (currentPage <= 2) return [1, 2, 3];
     if (currentPage >= pageCount - 1) return [pageCount - 2, pageCount - 1, pageCount];
-
     return [currentPage - 1, currentPage, currentPage + 1];
   }, [currentPage, pageCount]);
 
@@ -95,7 +108,7 @@ export function RecentOrders() {
       <CardHeader>
         <CardTitle className="font-normal text-muted-foreground text-sm">Recent Orders</CardTitle>
         <CardDescription className="text-foreground text-xl tabular-nums leading-none tracking-tight">
-          {orderCountDescription}
+          {loading ? "Loading…" : orderCountDescription}
         </CardDescription>
         <CardAction className="flex items-center gap-1">
           <Button aria-label="Open orders" size="icon-sm" variant="outline">
@@ -154,7 +167,16 @@ export function RecentOrders() {
               ))}
             </TableHeader>
             <TableBody className="**:data-[slot='table-row']:border-border/50 **:data-[slot='table-cell']:px-4 **:data-[slot='table-cell']:py-3 **:data-[slot='table-row']:hover:bg-transparent">
-              {table.getRowModel().rows.length ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    className="h-24 text-center text-muted-foreground"
+                    colSpan={table.getVisibleLeafColumns().length}
+                  >
+                    Loading orders…
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                     {row.getVisibleCells().map((cell) => (

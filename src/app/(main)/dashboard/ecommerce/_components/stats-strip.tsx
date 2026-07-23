@@ -5,83 +5,96 @@ import * as React from "react";
 import { ArrowUpRight, Box, DollarSign, FolderOpen, ShoppingCart, Users } from "lucide-react";
 
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCategories } from "@/store/categories-context";
-import { useCustomers } from "@/store/customers-context";
-import { useOrders } from "@/store/orders-context";
-import { useProducts } from "@/store/products-context";
+import { dashboardApi } from "@/lib/api";
+
+type Stats = {
+  totalRevenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  totalProducts: number;
+  lowStockProducts: number;
+  totalCategories: number;
+  totalCustomers: number;
+  newCustomers: number;
+};
+
+const EMPTY: Stats = {
+  totalRevenue: 0,
+  totalOrders: 0,
+  pendingOrders: 0,
+  totalProducts: 0,
+  lowStockProducts: 0,
+  totalCategories: 0,
+  totalCustomers: 0,
+  newCustomers: 0,
+};
 
 export function StatsStrip() {
-  const { products } = useProducts();
-  const { categories } = useCategories();
-  const { orders } = useOrders();
-  const { customers } = useCustomers();
+  const [stats, setStats] = React.useState<Stats>(EMPTY);
+  const [loading, setLoading] = React.useState(true);
 
-  // Defer to client to avoid SSR/client hydration mismatch (localStorage only on client)
-  const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
-    setMounted(true);
+    dashboardApi
+      .stats()
+      .then((res) => setStats(res.data))
+      .catch(() => setStats(EMPTY))
+      .finally(() => setLoading(false));
   }, []);
 
-  const totalRevenue = mounted
-    ? orders.reduce((sum, o) => {
-        const n = parseFloat(o.total.replace(/[$,]/g, ""));
-        return sum + (Number.isNaN(n) ? 0 : n);
-      }, 0)
-    : 0;
+  const fmt = (n: number) => n.toLocaleString();
+  const fmtMoney = (n: number) =>
+    `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const stats = [
+  const cards = [
     {
       title: "Total Revenue",
-      value: mounted
-        ? `$${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : "$0.00",
+      value: loading ? "—" : fmtMoney(stats.totalRevenue),
       icon: DollarSign,
-      sub: `${mounted ? orders.length : 0} orders`,
+      sub: loading ? "…" : `${fmt(stats.totalOrders)} orders`,
     },
     {
       title: "Total Orders",
-      value: mounted ? orders.length.toLocaleString() : "0",
+      value: loading ? "—" : fmt(stats.totalOrders),
       icon: ShoppingCart,
-      sub: `${mounted ? orders.filter((o) => o.status === "Ready").length : 0} pending`,
+      sub: loading ? "…" : `${fmt(stats.pendingOrders)} pending`,
     },
     {
       title: "Total Products",
-      value: mounted ? products.length.toLocaleString() : "0",
+      value: loading ? "—" : fmt(stats.totalProducts),
       icon: Box,
-      sub: `${mounted ? products.filter((p) => p.inventory < 20).length : 0} low stock`,
+      sub: loading ? "…" : `${fmt(stats.lowStockProducts)} low stock`,
     },
     {
       title: "Total Categories",
-      value: mounted ? categories.length.toLocaleString() : "0",
+      value: loading ? "—" : fmt(stats.totalCategories),
       icon: FolderOpen,
-      sub: `${mounted ? categories.length : 0} active`,
+      sub: loading ? "…" : `${fmt(stats.totalCategories)} active`,
     },
     {
       title: "Total Customers",
-      value: mounted ? customers.length.toLocaleString() : "0",
+      value: loading ? "—" : fmt(stats.totalCustomers),
       icon: Users,
-      sub: `${mounted ? customers.filter((c) => c.segment === "new").length : 0} new`,
+      sub: loading ? "…" : `${fmt(stats.newCustomers)} new`,
     },
   ];
 
   return (
     <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 xl:col-span-12">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          const isLast = index === stats.length - 1;
-
+        {cards.map((card, index) => {
+          const Icon = card.icon;
+          const isLast = index === cards.length - 1;
           return (
             <Card
-              key={stat.title}
+              key={card.title}
               className={["h-full rounded-none border-0 ring-0", !isLast ? "border-b lg:border-r lg:border-b-0" : ""]
                 .filter(Boolean)
                 .join(" ")}
             >
               <CardHeader>
-                <CardTitle className="font-normal text-muted-foreground text-sm">{stat.title}</CardTitle>
+                <CardTitle className="font-normal text-muted-foreground text-sm">{card.title}</CardTitle>
                 <CardDescription className="text-2xl text-foreground tabular-nums leading-none tracking-tight">
-                  {stat.value}
+                  {card.value}
                 </CardDescription>
                 <CardAction className="grid size-7 place-items-center rounded-md bg-muted">
                   <Icon className="size-3.5 text-foreground" />
@@ -90,7 +103,7 @@ export function StatsStrip() {
               <CardContent>
                 <div className="flex items-center gap-1 text-sm">
                   <ArrowUpRight className="size-3.5 text-green-700 dark:text-green-300" />
-                  <span className="text-muted-foreground">{stat.sub}</span>
+                  <span className="text-muted-foreground">{card.sub}</span>
                 </div>
               </CardContent>
             </Card>

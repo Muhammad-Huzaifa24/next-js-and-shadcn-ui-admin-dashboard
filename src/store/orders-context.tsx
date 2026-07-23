@@ -2,8 +2,7 @@
 
 import * as React from "react";
 
-import { storageGet, storageSet } from "./storage";
-import { STORAGE_KEYS } from "./storage-keys";
+import { ordersApi } from "@/lib/api";
 
 export type OrderRow = {
   id: string;
@@ -16,43 +15,77 @@ export type OrderRow = {
 
 interface OrdersContextValue {
   orders: OrderRow[];
-  addOrder: (order: Omit<OrderRow, "id">) => void;
-  updateOrder: (id: string, patch: Partial<OrderRow>) => void;
-  deleteOrder: (id: string) => void;
-  bulkDeleteOrders: (ids: string[]) => void;
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+  addOrder: (order: Omit<OrderRow, "id">) => Promise<void>;
+  updateOrder: (id: string, patch: Partial<OrderRow>) => Promise<void>;
+  deleteOrder: (id: string) => Promise<void>;
+  bulkDeleteOrders: (ids: string[]) => Promise<void>;
 }
 
 const OrdersContext = React.createContext<OrdersContextValue | null>(null);
 
+function mapOrder(raw: unknown): OrderRow {
+  const r = raw as Record<string, unknown>;
+  return {
+    id: String(r._id ?? r.id ?? ""),
+    date: r.date ? new Date(r.date as string).toISOString() : new Date().toISOString(),
+    customer: String(r.customer ?? ""),
+    payment: (r.payment as OrderRow["payment"]) ?? "Pending",
+    status: (r.status as OrderRow["status"]) ?? "Ready",
+    total: String(r.total ?? "0"),
+  };
+}
+
 export function OrdersProvider({ children }: { children: React.ReactNode }) {
-  const [orders, setOrders] = React.useState<OrderRow[]>(() => {
-    return storageGet<OrderRow[]>(STORAGE_KEYS.ORDERS) ?? [];
-  });
+  const [orders, setOrders] = React.useState<OrderRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function persist(next: OrderRow[]) {
-    setOrders(next);
-    storageSet(STORAGE_KEYS.ORDERS, next);
+  const refresh = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await ordersApi.list({ limit: "200" });
+      setOrders((res.data.orders as unknown[]).map(mapOrder));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load orders");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // biome-ignore lint/nursery/noFloatingPromises: intentional fire-and-forget on mount
+  React.useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  async function addOrder(data: Omit<OrderRow, "id">) {
+    const res = await ordersApi.create(data);
+    setOrders((prev) => [mapOrder(res.data.order), ...prev]);
   }
 
-  function addOrder(data: Omit<OrderRow, "id">) {
-    persist([...orders, { ...data, id: `#${Date.now()}` }]);
+  async function updateOrder(id: string, patch: Partial<OrderRow>) {
+    const res = await ordersApi.update(id, patch);
+    setOrders((prev) => prev.map((o) => (o.id === id ? mapOrder(res.data.order) : o)));
   }
 
-  function updateOrder(id: string, patch: Partial<OrderRow>) {
-    persist(orders.map((o) => (o.id === id ? { ...o, ...patch } : o)));
+  async function deleteOrder(id: string) {
+    await ordersApi.remove(id);
+    setOrders((prev) => prev.filter((o) => o.id !== id));
   }
 
-  function deleteOrder(id: string) {
-    persist(orders.filter((o) => o.id !== id));
-  }
-
-  function bulkDeleteOrders(ids: string[]) {
+  async function bulkDeleteOrders(ids: string[]) {
+    await ordersApi.bulkDelete(ids);
     const set = new Set(ids);
-    persist(orders.filter((o) => !set.has(o.id)));
+    setOrders((prev) => prev.filter((o) => !set.has(o.id)));
   }
 
   return (
-    <OrdersContext value={{ orders, addOrder, updateOrder, deleteOrder, bulkDeleteOrders }}>{children}</OrdersContext>
+    <OrdersContext value={{ orders, loading, error, refresh, addOrder, updateOrder, deleteOrder, bulkDeleteOrders }}>
+      {children}
+    </OrdersContext>
   );
 }
 

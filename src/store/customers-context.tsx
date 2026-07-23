@@ -2,8 +2,7 @@
 
 import * as React from "react";
 
-import { storageGet, storageSet } from "./storage";
-import { STORAGE_KEYS } from "./storage-keys";
+import { customersApi } from "@/lib/api";
 
 export type Segment = "all" | "new" | "europe" | "returning";
 
@@ -18,43 +17,77 @@ export type CustomerRow = {
 
 interface CustomersContextValue {
   customers: CustomerRow[];
-  addCustomer: (c: Omit<CustomerRow, "id">) => void;
-  updateCustomer: (id: string, patch: Partial<CustomerRow>) => void;
-  deleteCustomer: (id: string) => void;
-  bulkDeleteCustomers: (ids: string[]) => void;
+  loading: boolean;
+  error: string | null;
+  refresh: () => Promise<void>;
+  addCustomer: (c: Omit<CustomerRow, "id">) => Promise<void>;
+  updateCustomer: (id: string, patch: Partial<CustomerRow>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  bulkDeleteCustomers: (ids: string[]) => Promise<void>;
 }
 
 const CustomersContext = React.createContext<CustomersContextValue | null>(null);
 
+function mapCustomer(raw: unknown): CustomerRow {
+  const r = raw as Record<string, unknown>;
+  return {
+    id: String(r._id ?? r.id ?? ""),
+    name: String(r.name ?? ""),
+    location: String(r.location ?? ""),
+    orders: Number(r.orders ?? 0),
+    spent: String(r.spent ?? "0"),
+    segment: (r.segment as Segment) ?? "new",
+  };
+}
+
 export function CustomersProvider({ children }: { children: React.ReactNode }) {
-  const [customers, setCustomers] = React.useState<CustomerRow[]>(() => {
-    return storageGet<CustomerRow[]>(STORAGE_KEYS.CUSTOMERS) ?? [];
-  });
+  const [customers, setCustomers] = React.useState<CustomerRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  function persist(next: CustomerRow[]) {
-    setCustomers(next);
-    storageSet(STORAGE_KEYS.CUSTOMERS, next);
+  const refresh = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await customersApi.list();
+      setCustomers((res.data.customers as unknown[]).map(mapCustomer));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load customers");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // biome-ignore lint/nursery/noFloatingPromises: intentional fire-and-forget on mount
+  React.useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  async function addCustomer(data: Omit<CustomerRow, "id">) {
+    const res = await customersApi.create(data);
+    setCustomers((prev) => [...prev, mapCustomer(res.data.customer)]);
   }
 
-  function addCustomer(data: Omit<CustomerRow, "id">) {
-    persist([...customers, { ...data, id: `c${Date.now()}` }]);
+  async function updateCustomer(id: string, patch: Partial<CustomerRow>) {
+    const res = await customersApi.update(id, patch);
+    setCustomers((prev) => prev.map((c) => (c.id === id ? mapCustomer(res.data.customer) : c)));
   }
 
-  function updateCustomer(id: string, patch: Partial<CustomerRow>) {
-    persist(customers.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  async function deleteCustomer(id: string) {
+    await customersApi.remove(id);
+    setCustomers((prev) => prev.filter((c) => c.id !== id));
   }
 
-  function deleteCustomer(id: string) {
-    persist(customers.filter((c) => c.id !== id));
-  }
-
-  function bulkDeleteCustomers(ids: string[]) {
+  async function bulkDeleteCustomers(ids: string[]) {
+    await customersApi.bulkDelete(ids);
     const set = new Set(ids);
-    persist(customers.filter((c) => !set.has(c.id)));
+    setCustomers((prev) => prev.filter((c) => !set.has(c.id)));
   }
 
   return (
-    <CustomersContext value={{ customers, addCustomer, updateCustomer, deleteCustomer, bulkDeleteCustomers }}>
+    <CustomersContext
+      value={{ customers, loading, error, refresh, addCustomer, updateCustomer, deleteCustomer, bulkDeleteCustomers }}
+    >
       {children}
     </CustomersContext>
   );
