@@ -21,9 +21,9 @@ import {
 } from "./layout";
 import { THEME_MODE_VALUES, THEME_PRESET_VALUES } from "./theme";
 
-export type PreferencePersistence = "none" | "client-cookie" | "server-cookie" | "localStorage";
+export type PreferencePersistence = "none" | "client-cookie" | "server-cookie";
 
-type LayoutPersistence = Exclude<PreferencePersistence, "localStorage">;
+type LayoutPersistence = PreferencePersistence;
 
 type PreferenceDefinition<
   Values extends readonly string[],

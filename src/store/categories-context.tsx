@@ -7,6 +7,7 @@ import { categoriesApi } from "@/lib/api";
 export type CategoryItem = {
   id: string;
   name: string;
+  description: string;
   count: number;
   unit: string;
   color: string;
@@ -32,6 +33,7 @@ function mapCategory(raw: unknown): CategoryItem {
   return {
     id: String(r._id ?? r.id ?? ""),
     name: String(r.name ?? ""),
+    description: String(r.description ?? ""),
     count: Number(r.count ?? 0),
     unit: String(r.unit ?? ""),
     color: String(r.color ?? ""),

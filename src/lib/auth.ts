@@ -1,23 +1,43 @@
 /**
- * Auth helpers — replaces the hardcoded localStorage token with
- * real JWT-cookie-based auth backed by POST /api/v1/auth/login.
+ * Auth helpers.
  *
- * The access token is stored in an httpOnly cookie by the server,
- * so the browser cannot read it from JS. We track login state with
- * a lightweight non-sensitive "session marker" cookie that IS readable
- * by JS so the client-side AuthGuard can redirect without a round-trip.
+ * Token strategy:
+ *  - Server issues an httpOnly access_token cookie (read by the browser automatically)
+ *  - We ALSO store the raw accessToken string in localStorage so:
+ *      a) apiFetch can read it and send as Bearer header (works in any client)
+ *      b) API testing tools (Postman, Thunder Client) can use it
+ *  - A lightweight studio_session=1 cookie tracks login state for AuthGuard redirects
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
-
-// ─── Marker cookie (non-sensitive, JS-readable) ───────────────────────────────
-// Written by the FE after a successful login response; cleared on logout.
-// The actual auth is enforced by the httpOnly access_token cookie on every
-// API call — this marker is only for client-side redirect decisions.
 const SESSION_MARKER = "studio_session";
+
+/** Key used to store the raw JWT in localStorage */
+export const TOKEN_KEY = "studio_access_token";
+
+// ─── Token helpers ────────────────────────────────────────────────────────────
+
+export function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function saveToken(token: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function removeToken(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+// ─── Session marker helpers (for AuthGuard redirect logic) ───────────────────
 
 export function isAuthenticated(): boolean {
   if (typeof window === "undefined") return false;
+  // Check both localStorage token AND session cookie — either is enough
+  if (localStorage.getItem(TOKEN_KEY)) return true;
   // biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API not universally supported
   return document.cookie.split(";").some((c) => c.trim().startsWith(`${SESSION_MARKER}=1`));
 }
@@ -33,7 +53,8 @@ export function clearSessionMarker(): void {
   document.cookie = `${SESSION_MARKER}=; path=/; max-age=0; SameSite=Strict`;
 }
 
-// ─── User type (mirrors server safeUser response) ────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
+
 export type AuthUser = {
   id: string;
   name: string;
@@ -48,35 +69,43 @@ export async function apiLogin(email: string, password: string): Promise<{ user:
   const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // receive httpOnly cookies
+    credentials: "include",
     body: JSON.stringify({ email, password }),
   });
 
   const data = await res.json();
-  if (!res.ok) {
-    throw new Error(data.message ?? "Login failed");
-  }
+  if (!res.ok) throw new Error(data.message ?? "Login failed");
 
+  const { user, accessToken } = data.data as { user: AuthUser; accessToken: string };
+
+  // Persist token in localStorage so apiFetch sends it as Bearer header
+  saveToken(accessToken);
   setSessionMarker();
-  return data.data;
+
+  return { user, accessToken };
 }
 
 export async function apiLogout(): Promise<void> {
   try {
+    const token = getToken();
     await fetch(`${API_BASE}/api/v1/auth/logout`, {
       method: "POST",
       credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
   } finally {
-    // Always clear marker even if the request fails
+    // Always clear — even if the server request fails
+    removeToken();
     clearSessionMarker();
   }
 }
 
 export async function apiMe(): Promise<AuthUser | null> {
   try {
+    const token = getToken();
     const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
       credentials: "include",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -86,13 +115,6 @@ export async function apiMe(): Promise<AuthUser | null> {
   }
 }
 
-// ─── Legacy shims — kept so components not yet updated don't break ────────────
-/** @deprecated use apiLogin() instead */
-export function setAuthToken(): void {
-  setSessionMarker();
-}
-
-/** @deprecated use apiLogout() instead */
-export function clearAuthToken(): void {
-  clearSessionMarker();
-}
+// ─── Backward-compat aliases ──────────────────────────────────────────────────
+export const clearAuthToken = clearSessionMarker;
+export const setAuthToken = setSessionMarker;

@@ -2,8 +2,11 @@
  * Shared API client
  *
  * Every call goes through apiFetch which:
- *  - Attaches credentials so the httpOnly access_token cookie is sent
+ *  - Reads the JWT from localStorage and sends it as Authorization: Bearer <token>
+ *  - Also sends credentials:include so the httpOnly cookie works in browsers
  *  - Sets Content-Type / Accept headers on JSON requests
+ *  - On 401, attempts a silent token refresh once, then retries the original request
+ *  - On refresh failure, clears the token and redirects to /login
  *  - Throws ApiError with the server's message on non-2xx responses
  */
 
@@ -21,11 +24,61 @@ export class ApiError extends Error {
   }
 }
 
+// ─── Token helpers ────────────────────────────────────────────────────────────
+
+const TOKEN_KEY = "studio_access_token";
+
+function readToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+function writeToken(token: string): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+function clearToken(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+// ─── Silent token refresh ─────────────────────────────────────────────────────
+
+// Deduplicate concurrent refresh calls — only one in-flight at a time
+let refreshPromise: Promise<string | null> | null = null;
+
+async function silentRefresh(): Promise<string | null> {
+  if (await refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+        method: "POST",
+        credentials: "include", // sends the httpOnly refresh_token cookie
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const newToken = (data?.data?.accessToken as string) ?? null;
+      if (newToken) writeToken(newToken);
+      return newToken;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
 // ─── Core fetch wrapper ───────────────────────────────────────────────────────
 
 type FetchOptions = Omit<RequestInit, "body"> & { body?: unknown };
 
-export async function apiFetch<T = unknown>(path: string, options: FetchOptions = {}): Promise<T> {
+async function doFetch(path: string, options: FetchOptions, token: string | null) {
   const { body, headers, ...rest } = options;
   const isFormData = body instanceof FormData;
 
@@ -36,16 +89,40 @@ export async function apiFetch<T = unknown>(path: string, options: FetchOptions 
     serialisedBody = JSON.stringify(body);
   }
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  return fetch(`${API_BASE}${path}`, {
     credentials: "include",
     headers: {
       Accept: "application/json",
       ...(body && !isFormData ? { "Content-Type": "application/json" } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...headers,
     },
     body: serialisedBody,
     ...rest,
   });
+}
+
+export async function apiFetch<T = unknown>(path: string, options: FetchOptions = {}): Promise<T> {
+  // First attempt with current token
+  const token = readToken();
+  let res = await doFetch(path, options, token);
+
+  // On 401, try a silent refresh and retry once
+  if (res.status === 401) {
+    const newToken = await silentRefresh();
+
+    if (newToken) {
+      // Retry with the fresh token
+      res = await doFetch(path, options, newToken);
+    } else {
+      // Refresh failed — session is dead, send user to login
+      clearToken();
+      if (typeof window !== "undefined") {
+        window.location.replace("/login");
+      }
+      throw new ApiError("Session expired. Please log in again.", 401);
+    }
+  }
 
   if (!res.ok) {
     let message = `Request failed (${res.status})`;
@@ -76,16 +153,35 @@ export interface Pagination {
 // Categories
 export const categoriesApi = {
   list: () => apiFetch<{ success: boolean; data: { categories: unknown[] } }>("/api/v1/categories"),
+
+  /** Create with JSON body (no image) */
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { category: unknown } }>("/api/v1/categories", {
       method: "POST",
       body,
     }),
+
+  /** Create with FormData — image file uploaded as multipart */
+  createWithForm: (form: FormData) =>
+    apiFetch<{ success: boolean; data: { category: unknown } }>("/api/v1/categories", {
+      method: "POST",
+      body: form,
+    }),
+
+  /** Update with JSON body (no image change) */
   update: (id: string, body: unknown) =>
     apiFetch<{ success: boolean; data: { category: unknown } }>(`/api/v1/categories/${id}`, {
       method: "PUT",
       body,
     }),
+
+  /** Update with FormData — image file uploaded as multipart */
+  updateWithForm: (id: string, form: FormData) =>
+    apiFetch<{ success: boolean; data: { category: unknown } }>(`/api/v1/categories/${id}`, {
+      method: "PUT",
+      body: form,
+    }),
+
   remove: (id: string) => apiFetch(`/api/v1/categories/${id}`, { method: "DELETE" }),
   bulkDelete: (ids: string[]) => apiFetch("/api/v1/categories/bulk-delete", { method: "POST", body: { ids } }),
 };
@@ -196,15 +292,10 @@ export const dashboardApi = {
 
 // Uploads
 export const uploadsApi = {
-  upload: (files: File[]) => {
-    const form = new FormData();
-    for (const f of files) {
-      form.append("images", f);
-    }
-    return apiFetch<{ success: boolean; data: { urls: string[] } }>("/api/v1/uploads", {
+  upload: (images: string[]) =>
+    apiFetch<{ success: boolean; data: { urls: string[]; publicIds: string[] } }>("/api/v1/uploads", {
       method: "POST",
-      body: form,
-    });
-  },
-  remove: (filename: string) => apiFetch(`/api/v1/uploads/${filename}`, { method: "DELETE" }),
+      body: { images },
+    }),
+  remove: (publicId: string) => apiFetch("/api/v1/uploads", { method: "DELETE", body: { publicId } }),
 };

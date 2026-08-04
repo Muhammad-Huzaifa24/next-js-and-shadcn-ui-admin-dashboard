@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { categoriesApi } from "@/lib/api";
 import { useCategories } from "@/store/categories-context";
 import { useProducts } from "@/store/products-context";
 
@@ -22,9 +23,10 @@ interface Props {
 export default function CategoryDetailPage({ params }: Props) {
   const { id } = use(params);
   const router = useRouter();
-  const { categories, updateCategory } = useCategories();
+  const { categories, refresh } = useCategories();
   const { products } = useProducts();
 
+  const [saving, setSaving] = React.useState(false);
   const panelRef = React.useRef<CategoryInfoPanelRef | null>(null);
 
   const category = categories.find((c) => c.id === id);
@@ -37,15 +39,34 @@ export default function CategoryDetailPage({ params }: Props) {
 
   const categoryProducts = products.filter((p) => p.category.toLowerCase() === category.name.toLowerCase());
 
-  function handleSave() {
+  async function handleSave() {
     const values = panelRef.current?.getValues();
     if (!values) return;
     if (!values.name.trim()) {
       toast.error("Category name is required.");
       return;
     }
-    updateCategory(category!.id, { name: values.name.trim(), image: values.image });
-    toast.success("Category saved.");
+
+    setSaving(true);
+    try {
+      // Always use FormData so the image arrives as a real file (not base64)
+      const form = new FormData();
+      form.append("name", values.name.trim());
+
+      if (values.imageFile) {
+        // User picked a new image — send the File so BE uploads it to Cloudinary
+        form.append("image", values.imageFile);
+      }
+      // If no new file, omit "image" entirely — BE will leave the existing URL untouched
+
+      await categoriesApi.updateWithForm(category!.id, form);
+      await refresh(); // sync the context with the fresh data from DB
+      toast.success("Category saved.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save category");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -63,11 +84,11 @@ export default function CategoryDetailPage({ params }: Props) {
           <h1 className="text-3xl leading-none tracking-tight">{category.name}</h1>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/categories")}>
+          <Button variant="outline" size="sm" disabled={saving} onClick={() => router.push("/dashboard/categories")}>
             Cancel
           </Button>
-          <Button size="sm" onClick={handleSave}>
-            Save
+          <Button size="sm" disabled={saving} onClick={handleSave}>
+            {saving ? "Saving…" : "Save"}
           </Button>
         </div>
       </div>

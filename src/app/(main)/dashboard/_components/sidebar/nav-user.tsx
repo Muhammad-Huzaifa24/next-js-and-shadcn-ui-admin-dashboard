@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
-import { clearAuthToken } from "@/lib/auth";
+import { apiLogout } from "@/lib/auth";
 import { getInitials } from "@/lib/utils";
 
 export function NavUser({
@@ -29,8 +29,8 @@ export function NavUser({
   const { isMobile } = useSidebar();
   const router = useRouter();
 
-  function handleLogout() {
-    clearAuthToken();
+  async function handleLogout() {
+    await apiLogout();
     router.replace("/login");
   }
 

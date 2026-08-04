@@ -7,11 +7,13 @@ import { useRouter } from "next/navigation";
 import { Upload } from "lucide-react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { categoriesApi } from "@/lib/api";
 import { useCategories } from "@/store/categories-context";
 
 const COLOR_OPTIONS = [
@@ -28,19 +30,23 @@ const COLOR_OPTIONS = [
 
 export function AddCategoryForm() {
   const router = useRouter();
-  const { addCategory } = useCategories();
+  const { refresh } = useCategories();
 
   const [name, setName] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [color, setColor] = React.useState(COLOR_OPTIONS[0].value);
   const [visible, setVisible] = React.useState(true);
-  const [image, setImage] = React.useState<string>("");
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string>("");
+  const [loading, setLoading] = React.useState(false);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setImageFile(file);
+    // Preview only — not sent to BE
     const reader = new FileReader();
-    reader.onload = (ev) => setImage(ev.target?.result as string);
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
     reader.readAsDataURL(file);
   }
 
@@ -51,24 +57,36 @@ export function AddCategoryForm() {
       .slice(0, 2)
       .join("") || "??";
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Category name is required.");
       return;
     }
 
-    addCategory({
-      name: name.trim(),
-      count: 0,
-      unit: "items",
-      color,
-      initials,
-      image: image || undefined,
-    });
+    setLoading(true);
+    try {
+      // Build FormData — image is sent as a real file, not base64
+      const form = new FormData();
+      form.append("name", name.trim());
+      form.append("description", description.trim());
+      form.append("count", "0");
+      form.append("unit", "items");
+      form.append("color", color);
+      form.append("initials", initials);
+      if (imageFile) {
+        form.append("image", imageFile); // actual File object
+      }
 
-    toast.success(`"${name.trim()}" created`);
-    router.push("/dashboard/categories");
+      await categoriesApi.createWithForm(form);
+      await refresh(); // re-fetch categories list
+      toast.success(`"${name.trim()}" created`);
+      router.push("/dashboard/categories");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create category");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -138,14 +156,17 @@ export function AddCategoryForm() {
               <CardTitle className="text-base">Image</CardTitle>
             </CardHeader>
             <CardContent>
-              {image ? (
+              {imagePreview ? (
                 <div className="group relative overflow-hidden rounded-lg border">
-                  {/* biome-ignore lint/performance/noImgElement: base64 preview */}
-                  <img src={image} alt="Category preview" className="h-36 w-full object-cover" />
+                  {/* biome-ignore lint/performance/noImgElement: local preview only */}
+                  <img src={imagePreview} alt="Category preview" className="h-36 w-full object-cover" />
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       type="button"
-                      onClick={() => setImage("")}
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview("");
+                      }}
                       className="rounded-md bg-destructive px-3 py-1 text-destructive-foreground text-xs"
                     >
                       Remove
@@ -159,11 +180,13 @@ export function AddCategoryForm() {
                 >
                   <Upload className="size-4" />
                   <span className="font-medium text-foreground text-sm">Add File</span>
-                  <span className="text-xs">Or drag and drop files</span>
+                  <span className="text-xs">
+                    PNG, JPEG, or WebP · max {process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB ?? 5} MB
+                  </span>
                   <input
                     id="add-cat-image"
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/webp"
                     className="sr-only"
                     onChange={handleImageChange}
                   />
@@ -181,9 +204,9 @@ export function AddCategoryForm() {
               <CardTitle className="text-base">Preview</CardTitle>
             </CardHeader>
             <CardContent className="p-0 pb-4">
-              {image ? (
-                // biome-ignore lint/performance/noImgElement: base64 preview
-                <img src={image} alt="Preview" className="h-36 w-full rounded-t-md object-cover" />
+              {imagePreview ? (
+                // biome-ignore lint/performance/noImgElement: local preview only
+                <img src={imagePreview} alt="Preview" className="h-36 w-full rounded-t-md object-cover" />
               ) : (
                 <div
                   className={`flex h-36 items-center justify-center rounded-t-md font-bold text-3xl text-white/80 ${color}`}
@@ -212,6 +235,11 @@ export function AddCategoryForm() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Submit */}
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? "Saving…" : "Save Category"}
+          </Button>
         </div>
       </div>
     </form>
