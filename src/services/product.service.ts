@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import { ServiceError } from "@/lib/service-error";
 import type { Pagination } from "@/types";
 
-import Product from "../models/Product";
+import Product from "../models/product.js";
 
 /**
  * Product Service - Pure business logic extracted from Express product controller

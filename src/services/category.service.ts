@@ -4,7 +4,7 @@ import { cloudinary } from "@/config/cloudinary";
 import { connectDB } from "@/lib/db";
 import { ServiceError } from "@/lib/service-error";
 
-import Category from "../models/category";
+import Category from "../models/category.js";
 
 /**
  * Category Service - Pure business logic extracted from Express category controller

@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import { ServiceError } from "@/lib/service-error";
 import type { Pagination } from "@/types";
 
-import Customer from "../models/customer";
+import Customer from "../models/customer.js";
 
 /**
  * Customer Service - Pure business logic extracted from Express customer controller

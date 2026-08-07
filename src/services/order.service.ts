@@ -4,7 +4,7 @@ import { connectDB } from "@/lib/db";
 import { ServiceError } from "@/lib/service-error";
 import type { OrderStatus, Pagination } from "@/types";
 
-import Order from "../models/order";
+import Order from "../models/order.js";
 
 /**
  * Order Service - Pure business logic extracted from Express order controller

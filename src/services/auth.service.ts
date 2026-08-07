@@ -7,7 +7,7 @@ import { ServiceError } from "@/lib/service-error";
 import type { IUser, SafeUser } from "@/types";
 
 // Import User model (need to ensure models are created in FrontEnd)
-import User from "../models/user";
+import User from "../models/user.js";
 
 /**
  * Auth Service - Pure business logic extracted from Express auth controller
