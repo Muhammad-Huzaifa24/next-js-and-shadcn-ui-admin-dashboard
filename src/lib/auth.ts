@@ -9,7 +9,7 @@
  *  - A lightweight studio_session=1 cookie tracks login state for AuthGuard redirects
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 const SESSION_MARKER = "studio_session";
 
 /** Key used to store the raw JWT in localStorage */
@@ -113,6 +113,22 @@ export async function apiMe(): Promise<AuthUser | null> {
   } catch {
     return null;
   }
+}
+
+export async function apiChangePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const token = getToken();
+  const res = await fetch(`${API_BASE}/api/v1/auth/change-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: "include",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message ?? "Password change failed");
 }
 
 // ─── Backward-compat aliases ──────────────────────────────────────────────────

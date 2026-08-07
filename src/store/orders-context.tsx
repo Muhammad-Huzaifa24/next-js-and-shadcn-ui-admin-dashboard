@@ -56,7 +56,6 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // biome-ignore lint/nursery/noFloatingPromises: intentional fire-and-forget on mount
   React.useEffect(() => {
     void refresh();
   }, [refresh]);

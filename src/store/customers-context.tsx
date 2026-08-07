@@ -36,7 +36,7 @@ function mapCustomer(raw: unknown): CustomerRow {
     location: String(r.location ?? ""),
     orders: Number(r.orders ?? 0),
     spent: String(r.spent ?? "0"),
-    segment: (r.segment as Segment) ?? "new",
+    segment: (r.segment as Segment | undefined) ?? "new",
   };
 }
 
@@ -58,7 +58,6 @@ export function CustomersProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // biome-ignore lint/nursery/noFloatingPromises: intentional fire-and-forget on mount
   React.useEffect(() => {
     void refresh();
   }, [refresh]);

@@ -35,8 +35,12 @@ function createPreferencesStore(initialValues: PreferenceValueMap) {
 
       // Sync dark class for Tailwind dark: variant
       if (key === "theme_mode") {
-        const resolved =
-          value === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : value;
+        let resolved: string;
+        if (value === "system") {
+          resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        } else {
+          resolved = value;
+        }
         document.documentElement.classList.toggle("dark", resolved === "dark");
       }
 
@@ -94,8 +98,12 @@ export function PreferencesStoreProvider({ children, initialValues }: Preference
   // Apply dark class on mount based on persisted preference
   React.useEffect(() => {
     const mode = initialValues.theme_mode;
-    const resolved =
-      mode === "system" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
+    let resolved: string;
+    if (mode === "system") {
+      resolved = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    } else {
+      resolved = mode;
+    }
     document.documentElement.classList.toggle("dark", resolved === "dark");
   }, [initialValues.theme_mode]);
 

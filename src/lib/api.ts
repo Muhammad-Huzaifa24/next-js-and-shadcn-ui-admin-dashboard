@@ -10,7 +10,7 @@
  *  - Throws ApiError with the server's message on non-2xx responses
  */
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 // ─── Error class ──────────────────────────────────────────────────────────────
 
@@ -154,6 +154,9 @@ export interface Pagination {
 export const categoriesApi = {
   list: () => apiFetch<{ success: boolean; data: { categories: unknown[] } }>("/api/v1/categories"),
 
+  get: (id: string) =>
+    apiFetch<{ success: boolean; data: { category: unknown } }>(`/api/v1/categories/${id}`),
+
   /** Create with JSON body (no image) */
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { category: unknown } }>("/api/v1/categories", {
@@ -194,6 +197,8 @@ export const productsApi = {
       `/api/v1/products${qs}`,
     );
   },
+  get: (id: string) =>
+    apiFetch<{ success: boolean; data: { product: unknown } }>(`/api/v1/products/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { product: unknown } }>("/api/v1/products", {
       method: "POST",
@@ -214,6 +219,8 @@ export const ordersApi = {
     const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
     return apiFetch<{ success: boolean; data: { orders: unknown[]; pagination: Pagination } }>(`/api/v1/orders${qs}`);
   },
+  get: (id: string) =>
+    apiFetch<{ success: boolean; data: { order: unknown } }>(`/api/v1/orders/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { order: unknown } }>("/api/v1/orders", {
       method: "POST",
@@ -235,7 +242,12 @@ export const ordersApi = {
 
 // Customers
 export const customersApi = {
-  list: () => apiFetch<{ success: boolean; data: { customers: unknown[] } }>("/api/v1/customers"),
+  list: (params?: Record<string, string>) => {
+    const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
+    return apiFetch<{ success: boolean; data: { customers: unknown[]; pagination?: Pagination } }>(`/api/v1/customers${qs}`);
+  },
+  get: (id: string) =>
+    apiFetch<{ success: boolean; data: { customer: unknown } }>(`/api/v1/customers/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { customer: unknown } }>("/api/v1/customers", {
       method: "POST",
