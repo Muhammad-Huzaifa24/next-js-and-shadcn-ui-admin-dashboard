@@ -7,12 +7,7 @@ const nextConfig = {
 
   // Prevent Next.js from bundling these Node.js-only packages.
   // They must run in the Node.js runtime, not the Edge runtime or browser.
-  serverExternalPackages: [
-    "mongoose",
-    "bcryptjs",
-    "jsonwebtoken",
-    "sanitize-html",
-  ],
+  serverExternalPackages: ["mongoose", "bcryptjs", "jsonwebtoken", "sanitize-html"],
 
   async redirects() {
     return [

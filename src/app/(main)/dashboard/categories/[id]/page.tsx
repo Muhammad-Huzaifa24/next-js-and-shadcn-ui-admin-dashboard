@@ -59,7 +59,7 @@ export default function CategoryDetailPage({ params }: Props) {
       }
       // If no new file, omit "image" entirely — BE will leave the existing URL untouched
 
-      await categoriesApi.updateWithForm(category!.id, form);
+      await categoriesApi.updateWithForm(category?.id, form);
       await refresh(); // sync the context with the fresh data from DB
       toast.success("Category saved.");
     } catch (err) {

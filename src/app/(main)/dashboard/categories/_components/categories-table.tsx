@@ -160,9 +160,9 @@ export function CategoriesTable() {
   function confirmDeletion() {
     if (!deleteTarget) return;
     if (deleteTarget.ids.length === 1) {
-      deleteCategory(deleteTarget.ids[0]);
+      void deleteCategory(deleteTarget.ids[0]);
     } else {
-      bulkDeleteCategories(deleteTarget.ids);
+      void bulkDeleteCategories(deleteTarget.ids);
     }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} categories` : "Category"} deleted`);
     setClearTrigger((n) => n + 1);

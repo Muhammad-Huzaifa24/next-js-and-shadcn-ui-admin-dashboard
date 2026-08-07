@@ -172,9 +172,9 @@ export function CustomersTable() {
   function confirmDeletion() {
     if (!deleteTarget) return;
     if (deleteTarget.ids.length === 1) {
-      deleteCustomer(deleteTarget.ids[0]);
+      void deleteCustomer(deleteTarget.ids[0]);
     } else {
-      bulkDeleteCustomers(deleteTarget.ids);
+      void bulkDeleteCustomers(deleteTarget.ids);
     }
     if (deleteTarget.ids.length > 1) setRowSelection({});
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} customers` : "Customer"} deleted`);

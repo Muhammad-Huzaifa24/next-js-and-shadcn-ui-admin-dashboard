@@ -1,10 +1,11 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-import type { IUser } from '@/types';
+import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
+
+import type { IUser } from "@/types";
 
 /**
  * User model - mirrors BackEnd/src/models/User.js exactly
- * 
+ *
  * Fields mirror src/data/users.ts:
  *   { id, name, email, role: "administrator" }
  *
@@ -17,30 +18,30 @@ const userSchema = new mongoose.Schema<IUser>(
   {
     name: {
       type: String,
-      required: [true, 'Name is required'],
+      required: [true, "Name is required"],
       trim: true,
-      maxlength: [100, 'Name must not exceed 100 characters'],
+      maxlength: [100, "Name must not exceed 100 characters"],
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-      maxlength: [254, 'Email must not exceed 254 characters'],
+      maxlength: [254, "Email must not exceed 254 characters"],
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password is required'],
+      required: [true, "Password is required"],
       select: false, // excluded from all queries unless explicitly requested
     },
     role: {
       type: String,
       enum: {
-        values: ['administrator'],
-        message: 'Role must be: administrator',
+        values: ["administrator"],
+        message: "Role must be: administrator",
       },
-      default: 'administrator',
+      default: "administrator",
     },
     isActive: {
       type: Boolean,
@@ -57,14 +58,14 @@ const userSchema = new mongoose.Schema<IUser>(
       default: null,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // ─── Hash password before save ───────────────────────────────────────────────
 // Mongoose v9: async pre hooks must NOT accept next — just return a Promise.
 // Throw to signal an error; return early to skip.
-userSchema.pre('save', async function () {
-  if (!this.isModified('passwordHash')) return;
+userSchema.pre("save", async function () {
+  if (!this.isModified("passwordHash")) return;
   const salt = await bcrypt.genSalt(12);
   this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
 });
@@ -82,4 +83,4 @@ userSchema.methods.compareRefreshToken = async function (candidate: string) {
   return bcrypt.compare(candidate, this.refreshTokenHash);
 };
 
-export default mongoose.models.User || mongoose.model<IUser>('User', userSchema);
+export default mongoose.models.User || mongoose.model<IUser>("User", userSchema);

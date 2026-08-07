@@ -1,8 +1,8 @@
-import { connectDB } from '@/lib/db';
-import Order from '@/models/Order';
-import Product from '@/models/Product';
-import Category from '@/models/Category';
-import Customer from '@/models/Customer';
+import { connectDB } from "@/lib/db";
+import Category from "@/models/category";
+import Customer from "@/models/customer";
+import Order from "@/models/order";
+import Product from "@/models/product";
 
 /**
  * Dashboard Service - Pure business logic extracted from Express dashboard controller
@@ -32,27 +32,27 @@ export async function getStats(): Promise<DashboardStats> {
         input: {
           $replaceAll: {
             input: `$${field}`,
-            find: { $literal: '$' },
-            replacement: '',
+            find: { $literal: "$" },
+            replacement: "",
           },
         },
-        find: ',',
-        replacement: '',
+        find: ",",
+        replacement: "",
       },
     },
   });
 
   const [revenueData, orderCounts, productStats, categoryCount, customerStats] = await Promise.all([
     Order.aggregate([
-      { $project: { totalNum: parseTotalExpr('total') } },
-      { $group: { _id: null, totalRevenue: { $sum: '$totalNum' } } },
+      { $project: { totalNum: parseTotalExpr("total") } },
+      { $group: { _id: null, totalRevenue: { $sum: "$totalNum" } } },
     ]),
 
     Order.aggregate([
       {
         $facet: {
-          total: [{ $count: 'count' }],
-          pending: [{ $match: { status: 'Ready' } }, { $count: 'count' }],
+          total: [{ $count: "count" }],
+          pending: [{ $match: { status: "Ready" } }, { $count: "count" }],
         },
       },
     ]),
@@ -60,8 +60,8 @@ export async function getStats(): Promise<DashboardStats> {
     Product.aggregate([
       {
         $facet: {
-          total: [{ $count: 'count' }],
-          lowStock: [{ $match: { inventory: { $lt: 20 } } }, { $count: 'count' }],
+          total: [{ $count: "count" }],
+          lowStock: [{ $match: { inventory: { $lt: 20 } } }, { $count: "count" }],
         },
       },
     ]),
@@ -71,8 +71,8 @@ export async function getStats(): Promise<DashboardStats> {
     Customer.aggregate([
       {
         $facet: {
-          total: [{ $count: 'count' }],
-          new: [{ $match: { segment: 'new' } }, { $count: 'count' }],
+          total: [{ $count: "count" }],
+          new: [{ $match: { segment: "new" } }, { $count: "count" }],
         },
       },
     ]),
@@ -105,10 +105,10 @@ export interface RevenueOverviewItem {
   profit: number;
 }
 
-export async function getRevenueOverview(range: '3m' | '6m' | '12m' = '12m'): Promise<RevenueOverviewItem[]> {
+export async function getRevenueOverview(range: "3m" | "6m" | "12m" = "12m"): Promise<RevenueOverviewItem[]> {
   await connectDB();
 
-  const RANGE_MAP = { '3m': 3, '6m': 6, '12m': 12 };
+  const RANGE_MAP = { "3m": 3, "6m": 6, "12m": 12 };
   const monthsBack = RANGE_MAP[range] ?? 12;
 
   const monthsAgo = new Date();
@@ -118,19 +118,19 @@ export async function getRevenueOverview(range: '3m' | '6m' | '12m' = '12m'): Pr
     { $match: { date: { $gte: monthsAgo } } },
     {
       $project: {
-        month: { $dateToString: { format: '%Y-%m', date: '$date' } },
+        month: { $dateToString: { format: "%Y-%m", date: "$date" } },
         totalNum: {
           $toDouble: {
             $replaceAll: {
               input: {
                 $replaceAll: {
-                  input: '$total',
-                  find: { $literal: '$' },
-                  replacement: '',
+                  input: "$total",
+                  find: { $literal: "$" },
+                  replacement: "",
                 },
               },
-              find: ',',
-              replacement: '',
+              find: ",",
+              replacement: "",
             },
           },
         },
@@ -138,11 +138,11 @@ export async function getRevenueOverview(range: '3m' | '6m' | '12m' = '12m'): Pr
     },
     {
       $group: {
-        _id: '$month',
-        revenue: { $sum: '$totalNum' },
+        _id: "$month",
+        revenue: { $sum: "$totalNum" },
       },
     },
-    { $sort: { _id: 1 as 1 } },
+    { $sort: { _id: 1 as const } },
   ] as any[];
 
   const data = await Order.aggregate(pipeline);
@@ -166,15 +166,12 @@ export interface RecentOrder {
   fulfillment: string;
 }
 
-export async function getRecentOrders(limit: number = 5): Promise<RecentOrder[]> {
+export async function getRecentOrders(limit = 5): Promise<RecentOrder[]> {
   await connectDB();
 
   const maxLimit = Math.min(20, Math.max(1, limit));
 
-  const orders = await Order.find()
-    .sort({ date: -1 })
-    .limit(maxLimit)
-    .lean();
+  const orders = await Order.find().sort({ date: -1 }).limit(maxLimit).lean();
 
   // Map to RecentOrdersTable shape — add dummy `items` + `fulfillment` for now
   return orders.map((o) => ({
@@ -184,7 +181,7 @@ export async function getRecentOrders(limit: number = 5): Promise<RecentOrder[]>
     payment: o.payment,
     total: o.total,
     // Placeholder fields — update when the Order model gets these fields
-    items: '1 item',
-    fulfillment: o.status === 'Delivered' ? 'Fulfilled' : 'Unfulfilled',
+    items: "1 item",
+    fulfillment: o.status === "Delivered" ? "Fulfilled" : "Unfulfilled",
   }));
 }

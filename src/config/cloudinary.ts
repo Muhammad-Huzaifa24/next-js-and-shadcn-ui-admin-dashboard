@@ -1,4 +1,4 @@
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 
 /**
  * Lazy-init Cloudinary singleton.
@@ -14,9 +14,9 @@ import { v2 as cloudinary } from 'cloudinary';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure:     true,
+  secure: true,
 });
 
 /**
@@ -32,40 +32,39 @@ export async function testCloudinaryConnection(): Promise<boolean> {
     const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
     const missing: string[] = [];
-    if (!cloudName) missing.push('CLOUDINARY_CLOUD_NAME');
-    if (!apiKey) missing.push('CLOUDINARY_API_KEY');
-    if (!apiSecret) missing.push('CLOUDINARY_API_SECRET');
+    if (!cloudName) missing.push("CLOUDINARY_CLOUD_NAME");
+    if (!apiKey) missing.push("CLOUDINARY_API_KEY");
+    if (!apiSecret) missing.push("CLOUDINARY_API_SECRET");
 
     if (missing.length > 0) {
-      console.error(`[Cloudinary] Missing environment variables: ${missing.join(', ')}`);
-      console.error('[Cloudinary] Please add these to your .env.local file');
+      console.error(`[Cloudinary] Missing environment variables: ${missing.join(", ")}`);
+      console.error("[Cloudinary] Please add these to your .env.local file");
       return false;
     }
 
     // Test connection with Cloudinary API
     const result = await cloudinary.api.ping();
-    
-    if (result.status === 'ok') {
+
+    if (result.status === "ok") {
       console.log(`[Cloudinary] Using cloud: ${cloudName}`);
       return true;
-    } else {
-      console.error('[Cloudinary] API ping returned unexpected status:', result.status);
-      return false;
     }
+    console.error("[Cloudinary] API ping returned unexpected status:", result.status);
+    return false;
   } catch (error) {
     // Connection failed - provide helpful error messages
     const errorMessage = error instanceof Error ? error.message : String(error);
-    
-    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
-      console.error('[Cloudinary] Authentication failed - check your API_KEY and API_SECRET');
-    } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
-      console.error('[Cloudinary] Access forbidden - verify your account permissions');
-    } else if (errorMessage.includes('404') || errorMessage.includes('Not Found')) {
-      console.error('[Cloudinary] Cloud name not found - check your CLOUDINARY_CLOUD_NAME');
+
+    if (errorMessage.includes("401") || errorMessage.includes("Unauthorized")) {
+      console.error("[Cloudinary] Authentication failed - check your API_KEY and API_SECRET");
+    } else if (errorMessage.includes("403") || errorMessage.includes("Forbidden")) {
+      console.error("[Cloudinary] Access forbidden - verify your account permissions");
+    } else if (errorMessage.includes("404") || errorMessage.includes("Not Found")) {
+      console.error("[Cloudinary] Cloud name not found - check your CLOUDINARY_CLOUD_NAME");
     } else {
-      console.error('[Cloudinary] Connection test failed:', errorMessage);
+      console.error("[Cloudinary] Connection test failed:", errorMessage);
     }
-    
+
     return false;
   }
 }

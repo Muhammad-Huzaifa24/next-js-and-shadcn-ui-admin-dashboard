@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import { ZodError, ZodSchema } from 'zod';
+import { NextResponse } from "next/server";
+
+import type { ZodSchema } from "zod";
 
 /**
  * Validate request body against a Zod schema.
@@ -14,34 +15,29 @@ import { ZodError, ZodSchema } from 'zod';
 export async function validateRequest<T>(
   request: Request,
   schema: ZodSchema,
-): Promise<
-  | { success: true; data: T }
-  | { success: false; error: NextResponse }
-> {
+): Promise<{ success: true; data: T } | { success: false; error: NextResponse }> {
   let body: unknown;
 
   try {
     // Handle both JSON and FormData
-    const contentType = request.headers.get('content-type') || '';
+    const contentType = request.headers.get("content-type") || "";
 
-    if (contentType.includes('application/json')) {
+    if (contentType.includes("application/json")) {
       body = await request.json();
-    } else if (contentType.includes('multipart/form-data')) {
+    } else if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       // Convert FormData to object (only strings, not Files)
-      body = Object.fromEntries(
-        Array.from(formData.entries()).filter(([, value]) => typeof value === 'string'),
-      );
+      body = Object.fromEntries(Array.from(formData.entries()).filter(([, value]) => typeof value === "string"));
     } else {
       body = await request.json();
     }
-  } catch (err) {
+  } catch (_err) {
     return {
       success: false,
       error: NextResponse.json(
         {
           success: false,
-          message: 'Invalid request body',
+          message: "Invalid request body",
         },
         { status: 400 },
       ),
@@ -52,7 +48,7 @@ export async function validateRequest<T>(
 
   if (!result.success) {
     const errors = result.error.issues.map((issue) => ({
-      field: issue.path.join('.') || 'root',
+      field: issue.path.join(".") || "root",
       message: issue.message,
     }));
 
@@ -61,7 +57,7 @@ export async function validateRequest<T>(
       error: NextResponse.json(
         {
           success: false,
-          message: 'Validation failed',
+          message: "Validation failed",
           errors,
         },
         { status: 422 },

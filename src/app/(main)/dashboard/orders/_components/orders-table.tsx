@@ -183,9 +183,9 @@ export function OrdersTable() {
   function confirmDeletion() {
     if (!deleteTarget) return;
     if (deleteTarget.ids.length === 1) {
-      deleteOrder(deleteTarget.ids[0]);
+      void deleteOrder(deleteTarget.ids[0]);
     } else {
-      bulkDeleteOrders(deleteTarget.ids);
+      void bulkDeleteOrders(deleteTarget.ids);
     }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} orders` : "Order"} deleted`);
     setClearTrigger((n) => n + 1);

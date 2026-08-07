@@ -18,10 +18,7 @@ interface RequestLog {
   timestamps: number[];
 }
 
-export function createRateLimiter(
-  maxRequests: number,
-  windowMs: number,
-): RateLimiter {
+export function createRateLimiter(maxRequests: number, windowMs: number): RateLimiter {
   const store = new Map<string, RequestLog>();
 
   return {
@@ -29,7 +26,7 @@ export function createRateLimiter(
       const now = Date.now();
       const windowStart = now - windowMs;
 
-      let log = store.get(key);
+      const log = store.get(key);
 
       if (!log) {
         // First request from this key

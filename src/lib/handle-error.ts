@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
-import mongoose from 'mongoose';
+import { NextResponse } from "next/server";
+
+import mongoose from "mongoose";
 
 /**
  * Centralised Route Handler error converter.
@@ -14,43 +15,28 @@ import mongoose from 'mongoose';
 export function handleRouteError(err: unknown): NextResponse {
   // Known service errors (thrown by service layer with an explicit statusCode)
   if (err instanceof ServiceError) {
-    return NextResponse.json(
-      { success: false, message: err.message },
-      { status: err.statusCode },
-    );
+    return NextResponse.json({ success: false, message: err.message }, { status: err.statusCode });
   }
 
   // Mongoose validation error → 422
   if (err instanceof mongoose.Error.ValidationError) {
     const messages = Object.values(err.errors).map((e) => e.message);
-    return NextResponse.json(
-      { success: false, message: 'Validation failed', errors: messages },
-      { status: 422 },
-    );
+    return NextResponse.json({ success: false, message: "Validation failed", errors: messages }, { status: 422 });
   }
 
   // Mongoose duplicate key → 409
   if (isMongooseDuplicateKeyError(err)) {
-    return NextResponse.json(
-      { success: false, message: 'A record with that value already exists' },
-      { status: 409 },
-    );
+    return NextResponse.json({ success: false, message: "A record with that value already exists" }, { status: 409 });
   }
 
   // Mongoose cast error (bad ObjectId format) → 400
   if (err instanceof mongoose.Error.CastError) {
-    return NextResponse.json(
-      { success: false, message: `Invalid value for field: ${err.path}` },
-      { status: 400 },
-    );
+    return NextResponse.json({ success: false, message: `Invalid value for field: ${err.path}` }, { status: 400 });
   }
 
   // Unknown errors — log server-side, return generic 500
-  console.error('[handleRouteError]', err);
-  return NextResponse.json(
-    { success: false, message: 'An unexpected error occurred' },
-    { status: 500 },
-  );
+  console.error("[handleRouteError]", err);
+  return NextResponse.json({ success: false, message: "An unexpected error occurred" }, { status: 500 });
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +49,7 @@ export class ServiceError extends Error {
     message: string,
   ) {
     super(message);
-    this.name = 'ServiceError';
+    this.name = "ServiceError";
   }
 }
 
@@ -76,9 +62,5 @@ interface MongoError {
 }
 
 function isMongooseDuplicateKeyError(err: unknown): err is MongoError {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    (err as MongoError).code === 11000
-  );
+  return typeof err === "object" && err !== null && (err as MongoError).code === 11000;
 }

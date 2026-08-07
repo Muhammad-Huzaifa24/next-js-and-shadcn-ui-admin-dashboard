@@ -1,8 +1,9 @@
-import mongoose from 'mongoose';
-import { connectDB } from '@/lib/db';
-import { ServiceError } from '@/lib/service-error';
-import type { Pagination } from '@/types';
-import Customer from '@/models/Customer';
+import mongoose from "mongoose";
+
+import { connectDB } from "@/lib/db";
+import { ServiceError } from "@/lib/service-error";
+import Customer from "@/models/customer";
+import type { Pagination } from "@/types";
 
 /**
  * Customer Service - Pure business logic extracted from Express customer controller
@@ -17,16 +18,19 @@ export interface CustomerListParams {
   search?: string;
 }
 
+import type { ICustomer } from "@/types";
+import type { CreateCustomerInput, UpdateCustomerInput } from "@/validators/customer.schema";
+
 export interface CustomerListResult {
-  customers: any[];
+  customers: ICustomer[];
   pagination: Pagination;
 }
 
 export async function listCustomers(params: CustomerListParams = {}): Promise<CustomerListResult> {
   await connectDB();
 
-  const page = Math.max(1, params.page || 1);
-  const limit = Math.min(200, Math.max(1, params.limit || 200));
+  const page = Math.max(1, params.page ?? 1);
+  const limit = Math.min(200, Math.max(1, params.limit ?? 200));
   const skip = (page - 1) * limit;
 
   const SORT_MAP = {
@@ -36,11 +40,11 @@ export async function listCustomers(params: CustomerListParams = {}): Promise<Cu
     spent_desc: { spent: -1 },
     newest: { createdAt: -1 },
   };
-  const sort = (SORT_MAP as any)[params.sort || 'newest'] || SORT_MAP.newest;
+  const sort = (SORT_MAP as Record<string, any>)[params.sort ?? "newest"] ?? SORT_MAP.newest;
 
-  const filter: any = {};
+  const filter: Record<string, any> = {};
   if (params.segment) filter.segment = params.segment.trim();
-  if (params.search) filter.name = { $regex: params.search.trim(), $options: 'i' };
+  if (params.search) filter.name = { $regex: params.search.trim(), $options: "i" };
 
   const [customers, total] = await Promise.all([
     Customer.find(filter).sort(sort).skip(skip).limit(limit).lean(),
@@ -53,51 +57,47 @@ export async function listCustomers(params: CustomerListParams = {}): Promise<Cu
   };
 }
 
-export async function getCustomer(id: string): Promise<any> {
+export async function getCustomer(id: string): Promise<ICustomer> {
   await connectDB();
-  
+
   const customer = await Customer.findById(id).lean();
   if (!customer) {
-    throw new ServiceError(404, 'Customer not found');
+    throw new ServiceError(404, "Customer not found");
   }
   return customer;
 }
 
-export async function createCustomer(data: any): Promise<any> {
+export async function createCustomer(data: CreateCustomerInput): Promise<ICustomer> {
   await connectDB();
-  
+
   try {
     const customer = await Customer.create(data);
     return customer;
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (err.code === 11000) {
-      throw new ServiceError(409, 'A customer with that email already exists');
+      throw new ServiceError(409, "A customer with that email already exists");
     }
-    if (err.name === 'ValidationError') {
+    if (err.name === "ValidationError") {
       throw new ServiceError(422, err.message);
     }
     throw err;
   }
 }
 
-export async function updateCustomer(id: string, data: any): Promise<any> {
+export async function updateCustomer(id: string, data: UpdateCustomerInput): Promise<ICustomer> {
   await connectDB();
-  
+
   try {
-    const customer = await Customer.findByIdAndUpdate(
-      id,
-      data,
-      { new: true, runValidators: true }
-    );
+    const customer = await Customer.findByIdAndUpdate(id, data, { new: true, runValidators: true });
     if (!customer) {
-      throw new ServiceError(404, 'Customer not found');
+      throw new ServiceError(404, "Customer not found");
     }
     return customer;
   } catch (err: any) {
     if (err.code === 11000) {
-      throw new ServiceError(409, 'A customer with that email already exists');
+      throw new ServiceError(409, "A customer with that email already exists");
     }
-    if (err.name === 'ValidationError') {
+    if (err.name === "ValidationError") {
       throw new ServiceError(422, err.message);
     }
     throw err;
@@ -106,18 +106,18 @@ export async function updateCustomer(id: string, data: any): Promise<any> {
 
 export async function deleteCustomer(id: string): Promise<void> {
   await connectDB();
-  
+
   const customer = await Customer.findByIdAndDelete(id);
   if (!customer) {
-    throw new ServiceError(404, 'Customer not found');
+    throw new ServiceError(404, "Customer not found");
   }
 }
 
 export async function bulkDeleteCustomers(ids: string[]): Promise<{ deletedCount: number }> {
   await connectDB();
-  
+
   const objectIds = ids.map((id) => new mongoose.Types.ObjectId(id));
   const result = await Customer.deleteMany({ _id: { $in: objectIds } });
-  
+
   return { deletedCount: result.deletedCount };
 }

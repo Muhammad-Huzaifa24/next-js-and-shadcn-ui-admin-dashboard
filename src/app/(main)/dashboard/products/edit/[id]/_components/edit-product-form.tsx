@@ -115,7 +115,7 @@ export function EditProductForm({ productId }: { productId: string }) {
     setOptions((prev) => prev.map((o, idx) => (idx === i ? { ...o, values: o.values.filter((v) => v !== value) } : o)));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
       toast.error("Product name is required.");
@@ -130,7 +130,7 @@ export function EditProductForm({ productId }: { productId: string }) {
       return;
     }
 
-    updateProduct(productId, {
+    await updateProduct(productId, {
       name: name.trim(),
       description: description.trim(),
       category: selectedCategories[0],
@@ -241,6 +241,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                       </div>
                     </div>
                   ))}
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: stable static array for empty image slots */}
                   {Array.from({ length: MAX_IMAGES - images.length }).map((_, i) => (
                     <button
                       key={`empty-${images.length + i}`}
@@ -314,8 +315,12 @@ export function EditProductForm({ productId }: { productId: string }) {
               </div>
               {hasOptions && (
                 <div className="flex flex-col gap-4">
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: options are user-managed and index represents position */}
                   {options.map((opt, i) => (
-                    <div key={`${opt.type}-${i}-${opt.values.join(",")}`} className="flex flex-col gap-3 rounded-lg border p-3">
+                    <div
+                      key={`${opt.type}-${i}-${opt.values.join(",")}`}
+                      className="flex flex-col gap-3 rounded-lg border p-3"
+                    >
                       <div className="flex items-center justify-between">
                         <p className="font-medium text-sm">Option {i + 1}</p>
                         {options.length > 1 && (

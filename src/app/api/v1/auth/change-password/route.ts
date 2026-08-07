@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { handleRouteError } from '@/lib/handle-error';
-import { authenticate } from '@/middleware/authenticate';
-import { validateRequest } from '@/middleware/validate';
-import { changePasswordSchema } from '@/validators/auth.schema';
-import { changePassword } from '@/services/auth.service';
-import { ACCESS_COOKIE, accessCookieOptions } from '@/lib/jwt';
+import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { ACCESS_COOKIE, accessCookieOptions } from "@/lib/jwt";
+import { authenticate } from "@/middleware/authenticate";
+import { validateRequest } from "@/middleware/validate";
+import { changePassword } from "@/services/auth.service";
+import { changePasswordSchema } from "@/validators/auth.schema";
+
+export const runtime = "nodejs";
 
 /**
  * POST /api/v1/auth/change-password
- * 
+ *
  * Changes user password and issues fresh access token
  * Invalidates all existing refresh tokens
  * Requires authentication
@@ -22,11 +23,11 @@ export async function POST(request: NextRequest) {
     const user = await authenticate(request);
     if (!user) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Authentication required' 
+        {
+          success: false,
+          message: "Authentication required",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -52,10 +53,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Password changed successfully',
+        message: "Password changed successfully",
         data: { accessToken: newAccessToken },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);

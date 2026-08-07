@@ -1,33 +1,32 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { handleRouteError } from '@/lib/handle-error';
-import { validateRequest } from '@/middleware/validate';
-import { loginLimiter } from '@/middleware/rate-limit';
-import { loginSchema } from '@/validators/auth.schema';
-import { loginUser } from '@/services/auth.service';
-import { ACCESS_COOKIE, REFRESH_COOKIE, accessCookieOptions, refreshCookieOptions } from '@/lib/jwt';
+import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { ACCESS_COOKIE, accessCookieOptions, REFRESH_COOKIE, refreshCookieOptions } from "@/lib/jwt";
+import { loginLimiter } from "@/middleware/rate-limit";
+import { validateRequest } from "@/middleware/validate";
+import { loginUser } from "@/services/auth.service";
+import { loginSchema } from "@/validators/auth.schema";
+
+export const runtime = "nodejs";
 
 /**
  * POST /api/v1/auth/login
- * 
+ *
  * Authenticates user with email/password and sets httpOnly cookies
  * Rate limited: 5 attempts per 15 minutes per IP
  */
 export async function POST(request: NextRequest) {
   try {
     // Rate limiting check
-    const clientIP = request.headers.get('x-forwarded-for') || 
-                     request.headers.get('x-real-ip') || 
-                     'unknown';
+    const clientIP = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown";
     if (!loginLimiter.isAllowed(clientIP)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Too many login attempts, please try again later.' 
+        {
+          success: false,
+          message: "Too many login attempts, please try again later.",
         },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
@@ -53,13 +52,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        message: 'Login successful',
+        message: "Login successful",
         data: {
           user: result.user,
           accessToken: result.accessToken, // Also in cookie — sent here for clients that prefer header auth
         },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);

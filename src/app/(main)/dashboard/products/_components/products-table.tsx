@@ -149,9 +149,9 @@ export function ProductsTable() {
   function confirmDeletion() {
     if (!deleteTarget) return;
     if (deleteTarget.ids.length === 1) {
-      deleteProduct(deleteTarget.ids[0]);
+      void deleteProduct(deleteTarget.ids[0]);
     } else {
-      bulkDeleteProducts(deleteTarget.ids);
+      void bulkDeleteProducts(deleteTarget.ids);
     }
     toast.success(`${deleteTarget.ids.length > 1 ? `${deleteTarget.ids.length} products` : "Product"} deleted`);
     setClearTrigger((n) => n + 1);

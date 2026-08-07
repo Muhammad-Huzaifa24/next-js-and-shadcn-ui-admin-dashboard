@@ -6,7 +6,7 @@
  * fields (_id, __v, timestamps) in the "Safe" variants returned to clients.
  */
 
-import type { Document } from 'mongoose';
+import type { Document } from "mongoose";
 
 // ---------------------------------------------------------------------------
 // User
@@ -16,7 +16,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   passwordHash: string;
-  role: 'administrator';
+  role: "administrator";
   isActive: boolean;
   lastLoginAt: Date | null;
   refreshTokenHash: string | null;
@@ -30,7 +30,7 @@ export interface SafeUser {
   id: string;
   name: string;
   email: string;
-  role: 'administrator';
+  role: "administrator";
   isActive: boolean;
   lastLoginAt: string | null;
 }
@@ -88,8 +88,8 @@ export interface ICategory extends Document {
 // Order
 // ---------------------------------------------------------------------------
 
-export type PaymentStatus = 'Paid' | 'Pending' | 'Refunded';
-export type OrderStatus = 'Ready' | 'Shipped' | 'Delivered' | 'Cancelled';
+export type PaymentStatus = "Paid" | "Pending" | "Refunded";
+export type OrderStatus = "Ready" | "Shipped" | "Delivered" | "Cancelled";
 
 export interface IOrder extends Document {
   date: Date;
@@ -105,7 +105,7 @@ export interface IOrder extends Document {
 // Customer
 // ---------------------------------------------------------------------------
 
-export type CustomerSegment = 'all' | 'new' | 'europe' | 'returning';
+export type CustomerSegment = "all" | "new" | "europe" | "returning";
 
 export interface ICustomer extends Document {
   name: string;

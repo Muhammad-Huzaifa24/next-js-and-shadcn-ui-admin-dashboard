@@ -1,9 +1,10 @@
-import mongoose from 'mongoose';
-import type { IOrder, PaymentStatus, OrderStatus } from '@/types';
+import mongoose from "mongoose";
+
+import type { IOrder, OrderStatus, PaymentStatus } from "@/types";
 
 /**
  * Order model - mirrors BackEnd/src/models/Order.js exactly
- * 
+ *
  * Mirrors OrderRow from src/store/orders-context.tsx
  *
  * OrderRow {
@@ -15,8 +16,8 @@ import type { IOrder, PaymentStatus, OrderStatus } from '@/types';
  * }
  */
 
-const PAYMENT_ENUM: PaymentStatus[] = ['Paid', 'Pending', 'Refunded'];
-const STATUS_ENUM: OrderStatus[]  = ['Ready', 'Shipped', 'Delivered', 'Cancelled'];
+const PAYMENT_ENUM: PaymentStatus[] = ["Paid", "Pending", "Refunded"];
+const STATUS_ENUM: OrderStatus[] = ["Ready", "Shipped", "Delivered", "Cancelled"];
 
 const orderSchema = new mongoose.Schema<IOrder>(
   {
@@ -27,33 +28,33 @@ const orderSchema = new mongoose.Schema<IOrder>(
     },
     customer: {
       type: String,
-      required: [true, 'Customer name is required'],
+      required: [true, "Customer name is required"],
       trim: true,
     },
     payment: {
       type: String,
       enum: {
         values: PAYMENT_ENUM,
-        message: 'Payment must be one of: Paid, Pending, Refunded',
+        message: "Payment must be one of: Paid, Pending, Refunded",
       },
-      default: 'Pending',
+      default: "Pending",
     },
     status: {
       type: String,
       enum: {
         values: STATUS_ENUM,
-        message: 'Status must be one of: Ready, Shipped, Delivered, Cancelled',
+        message: "Status must be one of: Ready, Shipped, Delivered, Cancelled",
       },
-      default: 'Ready',
+      default: "Ready",
       index: true,
     },
     // Stored as string to match FE (e.g. "$150.00")
     total: {
       type: String,
-      default: '0',
+      default: "0",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.models.Order || mongoose.model<IOrder>('Order', orderSchema);
+export default mongoose.models.Order || mongoose.model<IOrder>("Order", orderSchema);

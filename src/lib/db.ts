@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /**
  * Mongoose cached connection singleton.
@@ -30,18 +30,20 @@ export async function connectDB(): Promise<typeof mongoose> {
   // Reuse an in-progress connection promise (handles concurrent cold starts)
   if (!cached.promise) {
     const uri = process.env.MONGO_URI;
-    if (!uri) throw new Error('MONGO_URI environment variable is not set');
+    if (!uri) throw new Error("MONGO_URI environment variable is not set");
 
-    console.log('🔌 Connecting to MongoDB...');
-    
-    cached.promise = mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 15000, // matches BackEnd/src/config/db.js
-      connectTimeoutMS: 15000,
-    }).then((mongoose) => {
-      const dbName = mongoose.connection.db?.databaseName || 'unknown';
-      console.log(`🗄️  MongoDB connected to database: ${dbName}`);
-      return mongoose;
-    });
+    console.log("🔌 Connecting to MongoDB...");
+
+    cached.promise = mongoose
+      .connect(uri, {
+        serverSelectionTimeoutMS: 15000, // matches BackEnd/src/config/db.js
+        connectTimeoutMS: 15000,
+      })
+      .then((mongoose) => {
+        const dbName = mongoose.connection.db?.databaseName || "unknown";
+        console.log(`🗄️  MongoDB connected to database: ${dbName}`);
+        return mongoose;
+      });
   }
 
   cached.conn = await cached.promise;

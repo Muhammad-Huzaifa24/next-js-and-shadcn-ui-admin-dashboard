@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Validates all required server-side environment variables at import time.
@@ -11,33 +11,31 @@ import { z } from 'zod';
 
 const envSchema = z.object({
   // MongoDB
-  MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
+  MONGO_URI: z.string().min(1, "MONGO_URI is required"),
 
   // JWT
-  JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
-  JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
-  JWT_ACCESS_EXPIRES_IN: z.string().min(1, 'JWT_ACCESS_EXPIRES_IN is required'),
-  JWT_REFRESH_EXPIRES_IN: z.string().min(1, 'JWT_REFRESH_EXPIRES_IN is required'),
+  JWT_ACCESS_SECRET: z.string().min(32, "JWT_ACCESS_SECRET must be at least 32 characters"),
+  JWT_REFRESH_SECRET: z.string().min(32, "JWT_REFRESH_SECRET must be at least 32 characters"),
+  JWT_ACCESS_EXPIRES_IN: z.string().min(1, "JWT_ACCESS_EXPIRES_IN is required"),
+  JWT_REFRESH_EXPIRES_IN: z.string().min(1, "JWT_REFRESH_EXPIRES_IN is required"),
 
   // Cookie
-  COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters'),
+  COOKIE_SECRET: z.string().min(32, "COOKIE_SECRET must be at least 32 characters"),
 
   // Cloudinary
-  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
-  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY is required'),
-  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET is required'),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1, "CLOUDINARY_CLOUD_NAME is required"),
+  CLOUDINARY_API_KEY: z.string().min(1, "CLOUDINARY_API_KEY is required"),
+  CLOUDINARY_API_SECRET: z.string().min(1, "CLOUDINARY_API_SECRET is required"),
 
   // Uploads
   MAX_FILE_SIZE_MB: z
     .string()
     .min(1)
     .transform(Number)
-    .pipe(z.number().positive('MAX_FILE_SIZE_MB must be a positive number')),
+    .pipe(z.number().positive("MAX_FILE_SIZE_MB must be a positive number")),
 
   // Node
-  NODE_ENV: z
-    .enum(['development', 'test', 'production'])
-    .default('development'),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -46,12 +44,10 @@ function validateEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    const issues = result.error.issues
-      .map((i) => `  • ${i.path.join('.')}: ${i.message}`)
-      .join('\n');
+    const issues = result.error.issues.map((i) => `  • ${i.path.join(".")}: ${i.message}`).join("\n");
     throw new Error(
       `\n\n[env] Missing or invalid environment variables:\n${issues}\n\n` +
-      `Copy BackEnd/.env.example to FrontEnd/.env.local and fill in all values.\n`,
+        `Copy BackEnd/.env.example to FrontEnd/.env.local and fill in all values.\n`,
     );
   }
 
@@ -65,8 +61,13 @@ function validateEnv(): Env {
  * because env vars are not available at build time on Vercel. Validation runs
  * on every server start and on every request in development.
  */
-const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build';
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
-export const env: Env = isBuildPhase
-  ? (process.env as unknown as Env)
-  : validateEnv();
+export const env: Env = isBuildPhase ? (process.env as unknown as Env) : validateEnv();
+
+// src/lib/env.ts
+if (!process.env.JWT_ACCESS_SECRET) throw new Error("JWT_ACCESS_SECRET is not set");
+if (!process.env.JWT_REFRESH_SECRET) throw new Error("JWT_REFRESH_SECRET is not set");
+
+export const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
+export const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;

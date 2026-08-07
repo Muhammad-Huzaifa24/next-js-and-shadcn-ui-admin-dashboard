@@ -136,7 +136,7 @@ export function AddProductForm() {
   }
 
   // ── Submit
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -152,7 +152,7 @@ export function AddProductForm() {
       return;
     }
 
-    addProduct({
+    await addProduct({
       name: name.trim(),
       description: description.trim(),
       category: selectedCategories[0],
@@ -267,6 +267,7 @@ export function AddProductForm() {
                     </div>
                   ))}
                   {/* Empty slots */}
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: stable static array for empty image slots */}
                   {Array.from({ length: MAX_IMAGES - images.length }).map((_, i) => (
                     <button
                       key={`empty-${images.length + i}`}
@@ -341,6 +342,7 @@ export function AddProductForm() {
 
               {hasOptions && (
                 <div className="flex flex-col gap-4">
+                  {/* biome-ignore lint/suspicious/noArrayIndexKey: options are user-managed and index represents position */}
                   {options.map((opt, i) => (
                     <div
                       key={`${opt.type}-${i}-${opt.values.join(",")}`}

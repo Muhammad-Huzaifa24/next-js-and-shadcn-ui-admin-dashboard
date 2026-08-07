@@ -1,9 +1,10 @@
-import mongoose from 'mongoose';
-import type { ICustomer, CustomerSegment } from '@/types';
+import mongoose from "mongoose";
+
+import type { CustomerSegment, ICustomer } from "@/types";
 
 /**
  * Customer model - mirrors BackEnd/src/models/Customer.js exactly
- * 
+ *
  * Mirrors CustomerRow from src/store/customers-context.tsx
  *
  * CustomerRow {
@@ -13,49 +14,49 @@ import type { ICustomer, CustomerSegment } from '@/types';
  * Segment: "all" | "new" | "europe" | "returning"
  */
 
-const SEGMENT_ENUM: CustomerSegment[] = ['all', 'new', 'europe', 'returning'];
+const SEGMENT_ENUM: CustomerSegment[] = ["all", "new", "europe", "returning"];
 
 const customerSchema = new mongoose.Schema<ICustomer>(
   {
     name: {
       type: String,
-      required: [true, 'Customer name is required'],
+      required: [true, "Customer name is required"],
       trim: true,
       // Security: do NOT log this field — treat as personal data
     },
     location: {
       type: String,
-      default: '',
+      default: "",
       trim: true,
     },
     orders: {
       type: Number,
       default: 0,
-      min: [0, 'Orders count cannot be negative'],
+      min: [0, "Orders count cannot be negative"],
     },
     // String to match FE shape (e.g. "$1,200")
     spent: {
       type: String,
-      default: '0',
+      default: "0",
     },
     segment: {
       type: String,
       enum: {
         values: SEGMENT_ENUM,
-        message: 'Segment must be one of: all, new, europe, returning',
+        message: "Segment must be one of: all, new, europe, returning",
       },
-      default: 'new',
+      default: "new",
     },
     // Optional — not shown in UI but used for server-side deduplication
     email: {
       type: String,
       unique: true,
-      sparse: true,   // allows multiple documents with no email
+      sparse: true, // allows multiple documents with no email
       lowercase: true,
       trim: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export default mongoose.models.Customer || mongoose.model<ICustomer>('Customer', customerSchema);
+export default mongoose.models.Customer || mongoose.model<ICustomer>("Customer", customerSchema);

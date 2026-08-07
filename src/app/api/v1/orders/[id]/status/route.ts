@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleRouteError } from '@/lib/handle-error';
-import { authenticate } from '@/middleware/authenticate';
-import { validateRequest } from '@/middleware/validate';
-import { patchStatusSchema, type PatchStatusInput } from '@/validators/order.schema';
-import { setOrderStatus } from '@/services/order.service';
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { authenticate } from "@/middleware/authenticate";
+import { validateRequest } from "@/middleware/validate";
+import { setOrderStatus } from "@/services/order.service";
+import { type PatchStatusInput, patchStatusSchema } from "@/validators/order.schema";
+
+export const runtime = "nodejs";
 
 interface RouteParams {
   params: {
@@ -15,7 +16,7 @@ interface RouteParams {
 
 /**
  * PATCH /api/v1/orders/[id]/status
- * 
+ *
  * Update only the order status (quick status change from table UI)
  * Body: { status: OrderStatus }
  */
@@ -24,10 +25,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Validate request body
@@ -46,7 +44,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { order },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);

@@ -3,7 +3,7 @@
  * Uses Cloudinary for image storage
  */
 
-import { v2 as cloudinary } from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 
 // Configure Cloudinary (should be done once at app startup)
 cloudinary.config({
@@ -24,17 +24,17 @@ export function uploadBufferToCloudinary(buffer: Buffer, publicId: string): Prom
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
-        folder: 'studio-admin',
+        folder: "studio-admin",
         public_id: publicId,
-        resource_type: 'image',
+        resource_type: "image",
         overwrite: false,
         secure: true,
       },
       (err, result) => {
         if (err) return reject(err);
-        if (!result) return reject(new Error('Upload failed'));
+        if (!result) return reject(new Error("Upload failed"));
         resolve(result.secure_url);
-      }
+      },
     );
     stream.end(buffer);
   });
@@ -45,7 +45,7 @@ export function uploadBufferToCloudinary(buffer: Buffer, publicId: string): Prom
  */
 export async function deleteImageFromCloudinary(publicId: string): Promise<boolean> {
   const result = await cloudinary.uploader.destroy(publicId);
-  return result.result === 'ok';
+  return result.result === "ok";
 }
 
 export { cloudinary };

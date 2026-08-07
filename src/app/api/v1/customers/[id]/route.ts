@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleRouteError } from '@/lib/handle-error';
-import { authenticate } from '@/middleware/authenticate';
-import { validateRequest } from '@/middleware/validate';
-import { updateCustomerSchema } from '@/validators/customer.schema';
-import { getCustomer, updateCustomer, deleteCustomer } from '@/services/customer.service';
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { authenticate } from "@/middleware/authenticate";
+import { validateRequest } from "@/middleware/validate";
+import { deleteCustomer, getCustomer, updateCustomer } from "@/services/customer.service";
+import { updateCustomerSchema } from "@/validators/customer.schema";
+
+export const runtime = "nodejs";
 
 interface RouteParams {
   params: {
@@ -15,7 +16,7 @@ interface RouteParams {
 
 /**
  * GET /api/v1/customers/[id]
- * 
+ *
  * Get a single customer by ID
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -23,10 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Call service layer
@@ -37,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { customer },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 /**
  * PUT /api/v1/customers/[id]
- * 
+ *
  * Update a customer
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
@@ -54,10 +52,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Validate request body
@@ -74,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { customer },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);
@@ -83,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 /**
  * DELETE /api/v1/customers/[id]
- * 
+ *
  * Delete a customer
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
@@ -91,19 +86,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Call service layer
     await deleteCustomer(params.id);
 
-    return NextResponse.json(
-      { success: true, message: 'Customer deleted' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: "Customer deleted" }, { status: 200 });
   } catch (err) {
     return handleRouteError(err);
   }

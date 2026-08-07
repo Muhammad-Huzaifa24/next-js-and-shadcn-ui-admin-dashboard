@@ -1,11 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleRouteError } from '@/lib/handle-error';
-import { authenticate } from '@/middleware/authenticate';
-import { validateRequest } from '@/middleware/validate';
-import { updateProductSchema } from '@/validators/product.schema';
-import { getProduct, updateProduct, patchProduct, deleteProduct } from '@/services/product.service';
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { authenticate } from "@/middleware/authenticate";
+import { validateRequest } from "@/middleware/validate";
+import { deleteProduct, getProduct, patchProduct, updateProduct } from "@/services/product.service";
+import { updateProductSchema } from "@/validators/product.schema";
+
+export const runtime = "nodejs";
 
 interface RouteParams {
   params: {
@@ -15,7 +16,7 @@ interface RouteParams {
 
 /**
  * GET /api/v1/products/[id]
- * 
+ *
  * Get a single product by ID
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -23,10 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Call service layer
@@ -37,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { product },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);
@@ -46,7 +44,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 /**
  * PUT /api/v1/products/[id]
- * 
+ *
  * Update a product (full replace)
  */
 export async function PUT(request: NextRequest, { params }: RouteParams) {
@@ -54,10 +52,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Validate request body
@@ -74,7 +69,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { product },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);
@@ -83,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 /**
  * PATCH /api/v1/products/[id]
- * 
+ *
  * Partially update a product
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
@@ -91,10 +86,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Validate request body
@@ -111,7 +103,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         success: true,
         data: { product },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);
@@ -120,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 /**
  * DELETE /api/v1/products/[id]
- * 
+ *
  * Delete a product
  */
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
@@ -128,19 +120,13 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
-      return NextResponse.json(
-        { success: false, message: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     // Call service layer
     await deleteProduct(params.id);
 
-    return NextResponse.json(
-      { success: true, message: 'Product deleted' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: "Product deleted" }, { status: 200 });
   } catch (err) {
     return handleRouteError(err);
   }

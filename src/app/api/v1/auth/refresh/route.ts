@@ -1,18 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { handleRouteError } from '@/lib/handle-error';
-import { refreshTokens } from '@/services/auth.service';
-import { ACCESS_COOKIE, REFRESH_COOKIE, accessCookieOptions, refreshCookieOptions } from '@/lib/jwt';
+import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { handleRouteError } from "@/lib/handle-error";
+import { ACCESS_COOKIE, accessCookieOptions, REFRESH_COOKIE, refreshCookieOptions } from "@/lib/jwt";
+import { refreshTokens } from "@/services/auth.service";
+
+export const runtime = "nodejs";
 
 /**
  * POST /api/v1/auth/refresh
- * 
+ *
  * Refreshes access token using refresh token cookie
  * Implements token rotation for security
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Get refresh token from cookie
     const cookieStore = await cookies();
@@ -20,11 +21,11 @@ export async function POST(request: NextRequest) {
 
     if (!refreshToken) {
       return NextResponse.json(
-        { 
-          success: false, 
-          message: 'Refresh token missing' 
+        {
+          success: false,
+          message: "Refresh token missing",
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -36,11 +37,11 @@ export async function POST(request: NextRequest) {
     cookieStore.set(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions());
 
     return NextResponse.json(
-      { 
-        success: true, 
-        data: { accessToken: result.accessToken } 
+      {
+        success: true,
+        data: { accessToken: result.accessToken },
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (err) {
     return handleRouteError(err);

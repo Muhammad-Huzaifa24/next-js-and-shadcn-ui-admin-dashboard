@@ -61,7 +61,7 @@ async function silentRefresh(): Promise<string | null> {
       if (!res.ok) return null;
 
       const data = await res.json();
-      const newToken = (data?.data?.accessToken as string) ?? null;
+      const newToken = data?.data?.accessToken as string;
       if (newToken) writeToken(newToken);
       return newToken;
     } catch {
@@ -128,7 +128,7 @@ export async function apiFetch<T = unknown>(path: string, options: FetchOptions 
     let message = `Request failed (${res.status})`;
     try {
       const data = await res.json();
-      message = (data?.message as string) ?? message;
+      message = data?.message as string;
     } catch {
       // non-JSON error body — keep default
     }
@@ -154,8 +154,7 @@ export interface Pagination {
 export const categoriesApi = {
   list: () => apiFetch<{ success: boolean; data: { categories: unknown[] } }>("/api/v1/categories"),
 
-  get: (id: string) =>
-    apiFetch<{ success: boolean; data: { category: unknown } }>(`/api/v1/categories/${id}`),
+  get: (id: string) => apiFetch<{ success: boolean; data: { category: unknown } }>(`/api/v1/categories/${id}`),
 
   /** Create with JSON body (no image) */
   create: (body: unknown) =>
@@ -197,8 +196,7 @@ export const productsApi = {
       `/api/v1/products${qs}`,
     );
   },
-  get: (id: string) =>
-    apiFetch<{ success: boolean; data: { product: unknown } }>(`/api/v1/products/${id}`),
+  get: (id: string) => apiFetch<{ success: boolean; data: { product: unknown } }>(`/api/v1/products/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { product: unknown } }>("/api/v1/products", {
       method: "POST",
@@ -219,8 +217,7 @@ export const ordersApi = {
     const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
     return apiFetch<{ success: boolean; data: { orders: unknown[]; pagination: Pagination } }>(`/api/v1/orders${qs}`);
   },
-  get: (id: string) =>
-    apiFetch<{ success: boolean; data: { order: unknown } }>(`/api/v1/orders/${id}`),
+  get: (id: string) => apiFetch<{ success: boolean; data: { order: unknown } }>(`/api/v1/orders/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { order: unknown } }>("/api/v1/orders", {
       method: "POST",
@@ -244,10 +241,11 @@ export const ordersApi = {
 export const customersApi = {
   list: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params).toString()}` : "";
-    return apiFetch<{ success: boolean; data: { customers: unknown[]; pagination?: Pagination } }>(`/api/v1/customers${qs}`);
+    return apiFetch<{ success: boolean; data: { customers: unknown[]; pagination?: Pagination } }>(
+      `/api/v1/customers${qs}`,
+    );
   },
-  get: (id: string) =>
-    apiFetch<{ success: boolean; data: { customer: unknown } }>(`/api/v1/customers/${id}`),
+  get: (id: string) => apiFetch<{ success: boolean; data: { customer: unknown } }>(`/api/v1/customers/${id}`),
   create: (body: unknown) =>
     apiFetch<{ success: boolean; data: { customer: unknown } }>("/api/v1/customers", {
       method: "POST",

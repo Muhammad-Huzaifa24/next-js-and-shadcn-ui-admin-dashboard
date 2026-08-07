@@ -20,9 +20,9 @@ export function CategoryProductsList({ products }: CategoryProductsListProps) {
 
   const [deleteTarget, setDeleteTarget] = React.useState<{ id: string; name: string } | null>(null);
 
-  function confirmDeletion() {
+  async function confirmDeletion() {
     if (!deleteTarget) return;
-    deleteProduct(deleteTarget.id);
+    await deleteProduct(deleteTarget.id);
     setDeleteTarget(null);
   }
 
