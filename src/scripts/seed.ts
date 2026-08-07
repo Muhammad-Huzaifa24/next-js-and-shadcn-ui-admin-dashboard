@@ -8,7 +8,7 @@
  * Security: skips silently in production so it can never touch live data.
  */
 
-import User from "../models/user.js";
+import User from "../models/user";
 
 /**
  * Creates the default admin user if one doesn't already exist.
