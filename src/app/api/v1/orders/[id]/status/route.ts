@@ -8,10 +8,8 @@ import { type PatchStatusInput, patchStatusSchema } from "@/validators/order.sch
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -20,8 +18,10 @@ interface RouteParams {
  * Update only the order status (quick status change from table UI)
  * Body: { status: OrderStatus }
  */
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -37,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const { status } = validation.data as PatchStatusInput;
 
     // Call service layer
-    const order = await setOrderStatus(params.id, status);
+    const order = await setOrderStatus(id, status);
 
     return NextResponse.json(
       {

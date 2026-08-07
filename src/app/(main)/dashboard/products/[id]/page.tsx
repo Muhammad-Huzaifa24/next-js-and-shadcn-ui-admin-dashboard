@@ -94,9 +94,9 @@ export default function ViewProductPage({ params }: Props) {
               {product.description && (
                 <div className="flex flex-col gap-1">
                   <p className="font-medium text-sm">Description</p>
+                  {/* biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized server-side */}
                   <div
                     className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground [&_ol]:list-decimal [&_ol]:pl-4 [&_ul]:list-disc [&_ul]:pl-4"
-                    {/* biome-ignore lint/security/noDangerouslySetInnerHtml: content is sanitized server-side */}
                     dangerouslySetInnerHTML={{ __html: product.description }}
                   />
                 </div>

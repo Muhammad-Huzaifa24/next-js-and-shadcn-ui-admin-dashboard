@@ -94,10 +94,12 @@ export async function createProduct(data: CreateProductInput): Promise<IProduct>
   try {
     const product = await Product.create(data);
     return product;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Duplicate key or validation errors surface with a clear message
-    if (err.code === 11000 || err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+    if (err && typeof err === "object" && "message" in err) {
+      if (("code" in err && err.code === 11000) || ("name" in err && err.name === "ValidationError")) {
+        throw new ServiceError(422, String(err.message));
+      }
     }
     throw err;
   }
@@ -112,9 +114,9 @@ export async function updateProduct(id: string, data: UpdateProductInput): Promi
       throw new ServiceError(404, "Product not found");
     }
     return product;
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }
@@ -129,9 +131,9 @@ export async function patchProduct(id: string, data: any): Promise<any> {
       throw new ServiceError(404, "Product not found");
     }
     return product;
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }

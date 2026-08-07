@@ -4,14 +4,12 @@ import { handleRouteError } from "@/lib/handle-error";
 import { authenticate } from "@/middleware/authenticate";
 import { validateRequest } from "@/middleware/validate";
 import { deleteCustomer, getCustomer, updateCustomer } from "@/services/customer.service";
-import { updateCustomerSchema } from "@/validators/customer.schema";
+import { type UpdateCustomerInput, updateCustomerSchema } from "@/validators/customer.schema";
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -19,8 +17,10 @@ interface RouteParams {
  *
  * Get a single customer by ID
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const customer = await getCustomer(params.id);
+    const customer = await getCustomer(id);
 
     return NextResponse.json(
       {
@@ -47,8 +47,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *
  * Update a customer
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const customer = await updateCustomer(params.id, validation.data);
+    const customer = await updateCustomer(id, validation.data as UpdateCustomerInput);
 
     return NextResponse.json(
       {
@@ -81,8 +83,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  *
  * Delete a customer
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -90,7 +94,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    await deleteCustomer(params.id);
+    await deleteCustomer(id);
 
     return NextResponse.json({ success: true, message: "Customer deleted" }, { status: 200 });
   } catch (err) {

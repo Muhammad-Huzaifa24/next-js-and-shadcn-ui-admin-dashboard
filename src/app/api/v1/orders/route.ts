@@ -4,7 +4,7 @@ import { handleRouteError } from "@/lib/handle-error";
 import { authenticate } from "@/middleware/authenticate";
 import { validateRequest } from "@/middleware/validate";
 import { createOrder, listOrders } from "@/services/order.service";
-import { createOrderSchema } from "@/validators/order.schema";
+import { type CreateOrderInput, createOrderSchema } from "@/validators/order.schema";
 
 export const runtime = "nodejs";
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call service layer
-    const order = await createOrder(validation.data);
+    const order = await createOrder(validation.data as CreateOrderInput);
 
     return NextResponse.json(
       {

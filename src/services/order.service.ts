@@ -81,9 +81,9 @@ export async function createOrder(data: any): Promise<any> {
   try {
     const order = await Order.create(data);
     return order;
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }
@@ -98,9 +98,9 @@ export async function updateOrder(id: string, data: any): Promise<any> {
       throw new ServiceError(404, "Order not found");
     }
     return order;
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }
@@ -116,9 +116,9 @@ export async function setOrderStatus(id: string, status: OrderStatus): Promise<a
       throw new ServiceError(404, "Order not found");
     }
     return order;
-  } catch (err: any) {
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+  } catch (err: unknown) {
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }

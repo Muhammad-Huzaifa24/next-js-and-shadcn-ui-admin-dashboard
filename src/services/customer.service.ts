@@ -74,11 +74,13 @@ export async function createCustomer(data: CreateCustomerInput): Promise<ICustom
     const customer = await Customer.create(data);
     return customer;
   } catch (err: unknown) {
-    if (err.code === 11000) {
+    // Check for duplicate key error (MongoDB error code 11000)
+    if (err && typeof err === "object" && "code" in err && err.code === 11000) {
       throw new ServiceError(409, "A customer with that email already exists");
     }
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+    // Check for validation error
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }
@@ -93,12 +95,14 @@ export async function updateCustomer(id: string, data: UpdateCustomerInput): Pro
       throw new ServiceError(404, "Customer not found");
     }
     return customer;
-  } catch (err: any) {
-    if (err.code === 11000) {
+  } catch (err: unknown) {
+    // Check for duplicate key error (MongoDB error code 11000)
+    if (err && typeof err === "object" && "code" in err && err.code === 11000) {
       throw new ServiceError(409, "A customer with that email already exists");
     }
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+    // Check for validation error
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }

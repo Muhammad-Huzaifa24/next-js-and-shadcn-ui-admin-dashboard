@@ -4,14 +4,12 @@ import { handleRouteError } from "@/lib/handle-error";
 import { authenticate } from "@/middleware/authenticate";
 import { validateRequest } from "@/middleware/validate";
 import { deleteOrder, getOrder, updateOrder } from "@/services/order.service";
-import { updateOrderSchema } from "@/validators/order.schema";
+import { type UpdateOrderInput, updateOrderSchema } from "@/validators/order.schema";
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -19,8 +17,10 @@ interface RouteParams {
  *
  * Get a single order by ID
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const order = await getOrder(params.id);
+    const order = await getOrder(id);
 
     return NextResponse.json(
       {
@@ -47,8 +47,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *
  * Update an order
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const order = await updateOrder(params.id, validation.data);
+    const order = await updateOrder(id, validation.data as UpdateOrderInput);
 
     return NextResponse.json(
       {
@@ -81,8 +83,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  *
  * Delete an order
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -90,7 +94,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    await deleteOrder(params.id);
+    await deleteOrder(id);
 
     return NextResponse.json({ success: true, message: "Order deleted" }, { status: 200 });
   } catch (err) {

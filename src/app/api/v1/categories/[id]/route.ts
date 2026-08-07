@@ -8,10 +8,8 @@ import { updateCategorySchema } from "@/validators/category.schema";
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -19,8 +17,10 @@ interface RouteParams {
  *
  * Get a single category by ID
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const category = await getCategory(params.id);
+    const category = await getCategory(id);
 
     return NextResponse.json(
       {
@@ -48,8 +48,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * Update a category
  * Supports both JSON and multipart/form-data (for image upload)
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -93,10 +95,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Add file to the data if present
-    const categoryData = { ...validation.data, file };
+    const categoryData = { ...(validation.data as Record<string, unknown>), file };
 
     // Call service layer
-    const category = await updateCategory(params.id, categoryData);
+    const category = await updateCategory(id, categoryData);
 
     return NextResponse.json(
       {
@@ -115,8 +117,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  *
  * Delete a category
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -124,7 +128,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    await deleteCategory(params.id);
+    await deleteCategory(id);
 
     return NextResponse.json({ success: true, message: "Category deleted" }, { status: 200 });
   } catch (err) {

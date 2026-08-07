@@ -19,7 +19,8 @@ export function uploadBufferToCloudinary(buffer: Buffer, publicId: string): Prom
       },
       (err, result) => {
         if (err) return reject(err);
-        resolve(result?.secure_url);
+        if (!result?.secure_url) return reject(new Error("Upload failed: no secure_url returned"));
+        resolve(result.secure_url);
       },
     );
     stream.end(buffer);

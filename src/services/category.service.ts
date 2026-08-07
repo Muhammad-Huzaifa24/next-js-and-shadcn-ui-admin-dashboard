@@ -57,7 +57,7 @@ async function uploadFileToCloudinary(file: File): Promise<string> {
 }
 
 // ─── Duplicate-key guard ──────────────────────────────────────────────────────
-const isDuplicate = (err: any) => err.code === 11000;
+const isDuplicate = (err: unknown) => err && typeof err === "object" && "code" in err && err.code === 11000;
 
 export async function listCategories(): Promise<any[]> {
   await connectDB();
@@ -121,13 +121,13 @@ export async function createCategory(data: CreateCategoryData): Promise<any> {
     console.log("[createCategory] Category created successfully:", category._id);
 
     return category;
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[createCategory] Error occurred:", err);
     if (isDuplicate(err)) {
       throw new ServiceError(409, `A category named "${data.name}" already exists`);
     }
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }
@@ -174,12 +174,12 @@ export async function updateCategory(id: string, data: UpdateCategoryData): Prom
       throw new ServiceError(404, "Category not found");
     }
     return category;
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (isDuplicate(err)) {
       throw new ServiceError(409, `A category named "${data.name}" already exists`);
     }
-    if (err.name === "ValidationError") {
-      throw new ServiceError(422, err.message);
+    if (err && typeof err === "object" && "name" in err && err.name === "ValidationError" && "message" in err) {
+      throw new ServiceError(422, String(err.message));
     }
     throw err;
   }

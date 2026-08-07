@@ -40,6 +40,8 @@ export default function CategoryDetailPage({ params }: Props) {
   const categoryProducts = products.filter((p) => p.category.toLowerCase() === category.name.toLowerCase());
 
   async function handleSave() {
+    if (!category?.id) return;
+
     const values = panelRef.current?.getValues();
     if (!values) return;
     if (!values.name.trim()) {
@@ -59,7 +61,7 @@ export default function CategoryDetailPage({ params }: Props) {
       }
       // If no new file, omit "image" entirely — BE will leave the existing URL untouched
 
-      await categoriesApi.updateWithForm(category?.id, form);
+      await categoriesApi.updateWithForm(category.id, form);
       await refresh(); // sync the context with the fresh data from DB
       toast.success("Category saved.");
     } catch (err) {

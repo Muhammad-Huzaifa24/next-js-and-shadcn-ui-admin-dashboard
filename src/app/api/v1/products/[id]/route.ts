@@ -4,14 +4,12 @@ import { handleRouteError } from "@/lib/handle-error";
 import { authenticate } from "@/middleware/authenticate";
 import { validateRequest } from "@/middleware/validate";
 import { deleteProduct, getProduct, patchProduct, updateProduct } from "@/services/product.service";
-import { updateProductSchema } from "@/validators/product.schema";
+import { type UpdateProductInput, updateProductSchema } from "@/validators/product.schema";
 
 export const runtime = "nodejs";
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+interface RouteContext {
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -19,8 +17,10 @@ interface RouteParams {
  *
  * Get a single product by ID
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const product = await getProduct(params.id);
+    const product = await getProduct(id);
 
     return NextResponse.json(
       {
@@ -47,8 +47,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *
  * Update a product (full replace)
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -62,7 +64,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const product = await updateProduct(params.id, validation.data);
+    const product = await updateProduct(id, validation.data as UpdateProductInput);
 
     return NextResponse.json(
       {
@@ -81,8 +83,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
  *
  * Partially update a product
  */
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -96,7 +100,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    const product = await patchProduct(params.id, validation.data);
+    const product = await patchProduct(id, validation.data as UpdateProductInput);
 
     return NextResponse.json(
       {
@@ -115,8 +119,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  *
  * Delete a product
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
+    const { id } = await context.params;
+
     // Authenticate user
     const user = await authenticate(request);
     if (!user) {
@@ -124,7 +130,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Call service layer
-    await deleteProduct(params.id);
+    await deleteProduct(id);
 
     return NextResponse.json({ success: true, message: "Product deleted" }, { status: 200 });
   } catch (err) {

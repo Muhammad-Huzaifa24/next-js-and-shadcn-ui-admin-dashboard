@@ -4,7 +4,7 @@ import { handleRouteError } from "@/lib/handle-error";
 import { authenticate } from "@/middleware/authenticate";
 import { validateRequest } from "@/middleware/validate";
 import { createProduct, listProducts } from "@/services/product.service";
-import { createProductSchema } from "@/validators/product.schema";
+import { type CreateProductInput, createProductSchema } from "@/validators/product.schema";
 
 export const runtime = "nodejs";
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Call service layer
-    const product = await createProduct(validation.data);
+    const product = await createProduct(validation.data as CreateProductInput);
 
     return NextResponse.json(
       {
