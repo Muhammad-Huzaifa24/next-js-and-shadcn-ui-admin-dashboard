@@ -11,6 +11,12 @@ export async function register() {
   // Only run Node.js-specific setup in the Node.js runtime.
   // Next.js also runs instrumentation in the Edge runtime — guard against that.
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Skip during build phase - only run at actual runtime
+    if (process.env.NEXT_PHASE === "phase-production-build") {
+      console.log("[instrumentation] Skipping during build phase");
+      return;
+    }
+
     /**
      * DNS resolution order fix for MongoDB Atlas SRV lookups on Windows and
      * some Linux configurations where IPv6 is preferred but Atlas only
