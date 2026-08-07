@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
-import type { IUser } from "@/types";
+import type { IUser } from "../types";
 
 /**
  * User model - mirrors BackEnd/src/models/User.js exactly

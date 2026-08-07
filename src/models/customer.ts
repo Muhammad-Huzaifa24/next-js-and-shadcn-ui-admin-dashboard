@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import type { CustomerSegment, ICustomer } from "@/types";
+import type { CustomerSegment, ICustomer } from "../types";
 
 /**
  * Customer model - mirrors BackEnd/src/models/Customer.js exactly

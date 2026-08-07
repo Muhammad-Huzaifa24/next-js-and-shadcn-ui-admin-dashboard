@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-import type { IOrder, OrderStatus, PaymentStatus } from "@/types";
+import type { IOrder, OrderStatus, PaymentStatus } from "../types";
 
 /**
  * Order model - mirrors BackEnd/src/models/Order.js exactly

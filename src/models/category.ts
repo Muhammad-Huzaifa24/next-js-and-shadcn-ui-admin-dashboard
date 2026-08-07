@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import sanitizeHtml from "sanitize-html";
 
-import type { ICategory } from "@/types";
+import type { ICategory } from "../types";
 
 /**
  * Category model - mirrors BackEnd/src/models/Category.js exactly

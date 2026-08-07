@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import sanitizeHtml from "sanitize-html";
 
-import type { IProduct, ProductOption } from "@/types";
+import type { IProduct, ProductOption } from "../types";
 
 /**
  * Product model - mirrors BackEnd/src/models/Product.js exactly
