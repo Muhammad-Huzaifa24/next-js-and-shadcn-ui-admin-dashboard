@@ -1,8 +1,9 @@
 import { connectDB } from "@/lib/db";
-import Category from "@/models/category";
-import Customer from "@/models/customer";
-import Order from "@/models/order";
-import Product from "@/models/product";
+
+import Category from "../models/category.js";
+import Customer from "../models/customer.js";
+import Order from "../models/order.js";
+import Product from "../models/product.js";
 
 /**
  * Dashboard Service - Pure business logic extracted from Express dashboard controller
